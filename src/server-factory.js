@@ -13,7 +13,7 @@ export default class ServerFactory {
     const id = query.id || name + query.filter + query.order;
 
     if (typeof this._instances[id] === 'undefined') {
-      this._instances[id] = this._create(name, query);
+      this._instances[id] = this._create(name, query).id(id);
     }
 
     return this._instances[id];

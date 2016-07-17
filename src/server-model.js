@@ -2,17 +2,25 @@ import ServerPage from './server-page';
 
 export default class ServerModel {
   constructor() {
-    this._name = null;
-    this._size = 15;
-    this._id = null;
-
+    this._id = '';
+    this._name = '';
     this._filter = '';
     this._order = '';
+    this._count = 15;
 
     this._meta = {};
     this._pages = {};
 
     this._connections = new Set();
+  }
+
+  id(id) {
+    if (typeof id === 'undefined') {
+      return this._id;
+    }
+
+    this._id = id;
+    return this;
   }
 
   name(name) {
@@ -21,15 +29,6 @@ export default class ServerModel {
     }
 
     this._name = name;
-    return this;
-  }
-
-  size(size) {
-    if (typeof size === 'undefined') {
-      return this._size;
-    }
-
-    this._size = size;
     return this;
   }
 
@@ -59,17 +58,8 @@ export default class ServerModel {
     return this;
   }
 
-  id(id) {
-    if (typeof id === 'undefined') {
-      if (this._id === null) {
-        this._id = this._name + this._filter + this._order;
-      }
-
-      return this._id;
-    }
-
-    this._id = id;
-    return this;
+  count() {
+    return this._count;
   }
 
   register(connection, action) {
@@ -87,7 +77,7 @@ export default class ServerModel {
   groups(callback) {
     if (this._meta.groups) {
       callback(null, {
-        size: this._size,
+        count: this._count,
         groups: this._meta.groups
       });
 
@@ -108,7 +98,7 @@ export default class ServerModel {
       this._meta.groups = data;
 
       callback(null, {
-        size: this._size,
+        count: this._count,
         groups: this._meta.groups
       });
     });
@@ -117,7 +107,7 @@ export default class ServerModel {
   total(callback) {
     if (this._meta.total) {
       callback(null, {
-        size: this._size,
+        count: this._count,
         total: this._meta.total
       });
 
@@ -138,7 +128,7 @@ export default class ServerModel {
       this._meta.total = data.total;
 
       callback(null, {
-        size: this._size,
+        count: this._count,
         total: this._meta.total
       });
     });

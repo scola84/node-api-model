@@ -7,12 +7,12 @@ export default class ClientModel extends EventEmitter {
 
     this._connection = null;
 
-    this._name = null;
-    this._size = 15;
-    this._id = null;
-
+    this._id = '';
+    this._name = '';
     this._filter = '';
     this._order = '';
+    this._count = 15;
+
     this._register = null;
 
     this._meta = {
@@ -32,21 +32,21 @@ export default class ClientModel extends EventEmitter {
     return this;
   }
 
+  id(id) {
+    if (typeof id === 'undefined') {
+      return this._id;
+    }
+
+    this._id = id;
+    return this;
+  }
+
   name(name) {
     if (typeof name === 'undefined') {
       return this._name;
     }
 
     this._name = name;
-    return this;
-  }
-
-  size(size) {
-    if (typeof size === 'undefined') {
-      return this._size;
-    }
-
-    this._size = size;
     return this;
   }
 
@@ -68,17 +68,8 @@ export default class ClientModel extends EventEmitter {
     return this;
   }
 
-  id(id) {
-    if (typeof id === 'undefined') {
-      if (this._id === null) {
-        this._id = this._name + this._filter + this._order;
-      }
-
-      return this._id;
-    }
-
-    this._id = id;
-    return this;
+  count() {
+    return this._count;
   }
 
   register(register) {
@@ -161,7 +152,7 @@ export default class ClientModel extends EventEmitter {
       }
     }, (response) => {
       response.on('data', (data) => {
-        this._size = data.size;
+        this._count = data.count;
         this.groups(data.groups);
         callback(data.groups);
       });
@@ -185,7 +176,7 @@ export default class ClientModel extends EventEmitter {
       }
     }, (response) => {
       response.on('data', (data) => {
-        this._size = data.size;
+        this._count = data.count;
         this.total(data.total);
         callback(data.total);
       });

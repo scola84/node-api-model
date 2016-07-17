@@ -37,14 +37,12 @@ export default class ServerPage {
       filter: this._model.filter(true),
       order: this._model.order(true),
       limit: {
-        offset: this._index * this._model.size(),
-        limit: this._model.size()
+        offset: this._index * this._model.count(),
+        count: this._model.count()
       }
     };
 
     this._model.items(parameters, (error, result) => {
-      console.log(error, result);
-      
       if (error) {
         callback(error);
         return;
