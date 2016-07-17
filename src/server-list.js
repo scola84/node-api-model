@@ -134,14 +134,14 @@ export default class ServerList {
     });
   }
 
-  page(page) {
-    if (typeof this._pages[page] === 'undefined') {
-      this._pages[page] = new ServerPage()
+  page(index) {
+    if (typeof this._pages[index] === 'undefined') {
+      this._pages[index] = new ServerPage()
         .model(this)
-        .index(page);
+        .index(index);
     }
 
-    return this._pages[page];
+    return this._pages[index];
   }
 
   _register(connection) {

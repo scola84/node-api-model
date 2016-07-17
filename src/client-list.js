@@ -5,8 +5,6 @@ export default class ClientList extends EventEmitter {
   constructor() {
     super();
 
-    this._connection = null;
-
     this._id = '';
     this._name = '';
     this._filter = '';
@@ -15,12 +13,10 @@ export default class ClientList extends EventEmitter {
 
     this._register = null;
 
-    this._meta = {
-      groups: [],
-      total: 0
-    };
-
+    this._meta = {};
     this._pages = {};
+
+    this._connection = null;
   }
 
   connection(connection) {
@@ -86,7 +82,11 @@ export default class ClientList extends EventEmitter {
   }
 
   groups(groups) {
-    if (typeof groups === 'function' || typeof groups === 'undefined') {
+    if (typeof groups === 'undefined') {
+      return this._meta.groups;
+    }
+
+    if (typeof groups === 'function') {
       return this._groups(groups);
     }
 
@@ -106,7 +106,11 @@ export default class ClientList extends EventEmitter {
   }
 
   total(total) {
-    if (typeof total === 'function' || typeof total === 'undefined') {
+    if (typeof total === 'undefined') {
+      return this._meta.total;
+    }
+
+    if (typeof total === 'function') {
       return this._total(total);
     }
 
@@ -116,14 +120,14 @@ export default class ClientList extends EventEmitter {
     return this;
   }
 
-  page(page) {
-    if (typeof this._pages[page] === 'undefined') {
-      this._pages[page] = new ClientPage()
+  page(index) {
+    if (typeof this._pages[index] === 'undefined') {
+      this._pages[index] = new ClientPage()
         .model(this)
-        .index(page);
+        .index(index);
     }
 
-    return this._pages[page];
+    return this._pages[index];
   }
 
   _unregister() {
@@ -138,8 +142,9 @@ export default class ClientList extends EventEmitter {
   }
 
   _groups(callback) {
-    if (typeof callback === 'undefined') {
-      return this._meta.groups;
+    if (this._meta.groups) {
+      callback(this._meta.groups);
+      return;
     }
 
     this._connection.request({
@@ -157,13 +162,12 @@ export default class ClientList extends EventEmitter {
         callback(data.groups);
       });
     }).end();
-
-    return this;
   }
 
   _total(callback) {
-    if (typeof callback === 'undefined') {
-      return this._meta.total;
+    if (this._meta.total) {
+      callback(this._meta.total);
+      return;
     }
 
     this._connection.request({
@@ -181,7 +185,5 @@ export default class ClientList extends EventEmitter {
         callback(data.total);
       });
     }).end();
-
-    return this;
   }
 }
