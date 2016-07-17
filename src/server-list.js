@@ -218,4 +218,16 @@ export default class ServerList {
       direction
     };
   }
+
+  _items() {
+    throw new Error('Not implemented');
+  }
+
+  _groups() {
+    throw new Error('Not implemented');
+  }
+
+  _total() {
+    throw new Error('Not implemented');
+  }
 }
