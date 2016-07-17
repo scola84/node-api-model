@@ -6,8 +6,8 @@ export default class ClientFactory extends ServerFactory {
     this._connection = connection;
   }
 
-  _create(name, query) {
-    return super._create(name, query)
+  _createList(name, query) {
+    return super._createList(name, query)
       .connection(this._connection);
   }
 }

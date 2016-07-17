@@ -1,6 +1,6 @@
 import ServerPage from './server-page';
 
-export default class ServerModel {
+export default class ServerList {
   constructor() {
     this._id = '';
     this._name = '';

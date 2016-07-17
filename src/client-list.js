@@ -1,7 +1,7 @@
 import EventEmitter from 'events';
 import ClientPage from './client-page';
 
-export default class ClientModel extends EventEmitter {
+export default class ClientList extends EventEmitter {
   constructor() {
     super();
 
