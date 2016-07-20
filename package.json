@@ -12,5 +12,8 @@
   },
   "scripts": {
     "build": "rollup -i index.js -o ./dist/api-model.js -f cjs"
+  },
+  "dependencies": {
+    "odiff": "0.0.2"
   }
 }
