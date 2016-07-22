@@ -225,7 +225,7 @@ export default class ServerObject {
 
   change(action, diff) {
     if (action === 'update') {
-      this._data = apply(this._data, diff);
+      this._data = apply(Object.assign({}, this._data), diff);
       this._copy = Object.assign({}, this._data);
     }
 
@@ -235,6 +235,14 @@ export default class ServerObject {
 
     this._notifyClients(action, diff);
     return this;
+  }
+
+  _bindConnection(connection) {
+    connection.once('close', this._handleClose);
+  }
+
+  _unbindConnection(connection) {
+    connection.removeListener('close', this._handleClose);
   }
 
   _notifyClients(action, diff) {
@@ -252,7 +260,7 @@ export default class ServerObject {
   _notifyPeers(action, diff) {
     this._connection.request({
       method: 'PUB',
-      path: '/i/' + this._name + '/' + this._id
+      path: '/' + this._name + '/' + this._id
     }).end({
       action,
       diff

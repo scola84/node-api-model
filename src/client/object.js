@@ -159,7 +159,7 @@ export default class ClientObject extends EventEmitter {
 
   change(action, diff) {
     if (action === 'update') {
-      this._data = apply(this._data, diff);
+      this._data = apply(Object.assign({}, this._data), diff);
     }
 
     if (action === 'delete') {
@@ -226,6 +226,7 @@ export default class ClientObject extends EventEmitter {
 
       if (response.statusCode === 200 && data) {
         this._data = data;
+        console.log(this._data, data);
       }
 
       if (callback) {

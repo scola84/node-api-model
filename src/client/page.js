@@ -14,7 +14,7 @@ export default class ClientPage {
   }
 
   list(list) {
-    if (list === 'undefined') {
+    if (typeof list === 'undefined') {
       return this._list;
     }
 
@@ -25,7 +25,7 @@ export default class ClientPage {
   }
 
   index(index) {
-    if (index === 'undefined') {
+    if (typeof index === 'undefined') {
       return this._index;
     }
 
@@ -61,7 +61,7 @@ export default class ClientPage {
   }
 
   _bindConnection() {
-    this._list.connection().once('open', this._handleOpen);
+    this._list.connection().addListener('open', this._handleOpen);
   }
 
   _unbindConnection() {

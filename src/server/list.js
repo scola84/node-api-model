@@ -175,6 +175,8 @@ export default class ServerList {
   }
 
   page(index) {
+    index = Number(index);
+
     if (!this._pages.has(index)) {
       this._pages.set(index, new ServerPage()
         .list(this)
@@ -186,11 +188,11 @@ export default class ServerList {
   }
 
   change(action, diff, id, callback) {
-    this._changePages(action, diff, id, (pages) => {
+    this._changePages(action, diff, id, (pageDiffs) => {
       if (this._meta.has('groups')) {
-        this._changeGroups(action, pages, callback);
+        this._changeGroups(action, pageDiffs, callback);
       } else if (this._meta.has('total')) {
-        this._changeTotal(action, pages, callback);
+        this._changeTotal(action, pageDiffs, callback);
       }
     });
   }
@@ -263,25 +265,26 @@ export default class ServerList {
   }
 
   _changePages(action, diff, id, callback) {
-    const pages = {};
+    const pageDiffs = {};
     let count = 0;
 
     this._pages.forEach((page, index) => {
       page.change(action, diff, id, (pageDiff) => {
+        index = Number(index);
         count += 1;
 
         if (pageDiff) {
-          pages[index] = pageDiff;
+          pageDiffs[index] = pageDiff;
         }
 
         if (count === this._pages.size) {
-          callback(pages);
+          callback(pageDiffs);
         }
       });
     });
   }
 
-  _changeGroups(action, pages, callback) {
+  _changeGroups(action, pageDiffs, callback) {
     const groups = this._meta.get('groups');
     this._meta.delete('groups');
 
@@ -290,11 +293,11 @@ export default class ServerList {
 
       if (!error) {
         diff = {
-          pages,
+          pages: pageDiffs,
           groups: odiff(groups, data.groups)
         };
 
-        this._notify(action, diff);
+        this._notifyClients(action, diff);
       }
 
       if (callback) {
@@ -303,7 +306,7 @@ export default class ServerList {
     });
   }
 
-  _changeTotal(action, pages, callback) {
+  _changeTotal(action, pageDiffs, callback) {
     this._meta.delete('total');
 
     this.total((error, data) => {
@@ -311,11 +314,11 @@ export default class ServerList {
 
       if (!error) {
         diff = {
-          pages,
+          pages: pageDiffs,
           total: data.total
         };
 
-        this._notify(action, diff);
+        this._notifyClients(action, diff);
       }
 
       if (callback) {
@@ -324,7 +327,7 @@ export default class ServerList {
     });
   }
 
-  _notify(action, diff) {
+  _notifyClients(action, diff) {
     this._connections.forEach((connection) => {
       connection.request({
         method: 'PUB',

@@ -143,6 +143,8 @@ export default class ClientList extends EventEmitter {
   }
 
   page(index) {
+    index = Number(index);
+
     if (!this._pages.has(index)) {
       this._pages.set(index, new ClientPage()
         .list(this)
@@ -159,18 +161,19 @@ export default class ClientList extends EventEmitter {
       this.total(diff.total);
     }
 
-    const pages = Object.keys(diff.pages);
+    const indices = Object.keys(diff.pages);
     let page = null;
 
-    pages.forEach((index) => {
-      page = this._pages.get(Number(index));
+    indices.forEach((index) => {
+      index = Number(index);
+      page = this._pages.get(index);
 
       if (page) {
         page.change(action, diff.pages[index]);
       }
     });
 
-    this.emit('change', action, pages);
+    this.emit('change', action, indices);
     return this;
   }
 
@@ -267,6 +270,7 @@ export default class ClientList extends EventEmitter {
 
     if (this._meta.has('groups')) {
       this._meta.delete('groups');
+      this._meta.delete('total');
       this._groups();
     }
 

@@ -55,20 +55,23 @@ export default class ClientModel {
       return this._object;
     }
 
+    const id = String(params.id);
+
     if (action === 'insert') {
-      this._objects.set(params.id, params.object);
+      this._objects.set(id, params.object);
       return this;
     }
 
     if (action === 'delete') {
-      this._objects.delete(params.id);
+      this._objects.delete(id);
       return this;
     }
 
-    if (!this._objects.has(params.id)) {
-      this._objects.set(params.id, this._object.create(params.id));
+    if (!this._objects.has(id)) {
+      console.log('not found', params.id);
+      this._objects.set(id, this._object.create(id));
     }
 
-    return this._objects.get(params.id);
+    return this._objects.get(id);
   }
 }
