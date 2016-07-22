@@ -2,15 +2,39 @@ import ServerObject from './object';
 
 export default class ServerObjectModel {
   constructor() {
+    this._name = null;
     this._model = null;
+    this._connection = null;
+    this._authorize = null;
+    this._validate = null;
     this._select = null;
     this._insert = null;
     this._update = null;
     this._delete = null;
   }
 
+  name(name) {
+    this._name = name;
+    return this;
+  }
+
   model(model) {
     this._model = model;
+    return this;
+  }
+
+  connection(connection) {
+    this._connection = connection;
+    return this;
+  }
+
+  authorize(authorize) {
+    this._authorize = authorize;
+    return this;
+  }
+
+  validate(validate) {
+    this._validate = validate;
     return this;
   }
 
@@ -37,7 +61,11 @@ export default class ServerObjectModel {
   create(id) {
     return new ServerObject()
       .id(id)
+      .name(this._name)
       .model(this._model)
+      .connection(this._connection)
+      .authorize(this._authorize)
+      .validate(this._validate)
       .select(this._select)
       .insert(this._insert)
       .update(this._update)

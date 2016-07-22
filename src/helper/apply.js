@@ -1,10 +1,12 @@
 'use strict';
 
 function set(value, diff) {
-  const end = diff.path.pop();
+  const path = [...diff.path];
+  const end = path.pop();
+
   let target = value;
 
-  diff.path.forEach((key) => {
+  path.forEach((key) => {
     target = target[key];
   });
 

@@ -33,7 +33,10 @@ export default class ServerPage {
     }
 
     if (this._data) {
-      callback(null, this._data);
+      if (callback) {
+        callback(null, this._data);
+      }
+
       return this;
     }
 
@@ -46,14 +49,12 @@ export default class ServerPage {
       }
     };
 
-    this._select(params, (error, result) => {
-      if (error) {
-        callback(error);
-        return;
+    this._select(params, (error, data) => {
+      if (!error) {
+        this._data = data;
       }
 
-      this._data = result;
-      callback(null, result);
+      callback(error, data);
     });
 
     return this;

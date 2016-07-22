@@ -5,6 +5,12 @@ export default class ClientPage {
     this._list = null;
     this._index = null;
     this._data = null;
+
+    this._handleOpen = () => this._open();
+  }
+
+  destroy() {
+    this._unbindConnection();
   }
 
   list(list) {
@@ -13,6 +19,8 @@ export default class ClientPage {
     }
 
     this._list = list;
+    this._bindConnection();
+
     return this;
   }
 
@@ -27,26 +35,58 @@ export default class ClientPage {
 
   select(callback) {
     if (this._data) {
-      callback(this._data);
+      if (callback) {
+        callback(null, this._data);
+      }
+
       return;
     }
 
-    this._list.connection().request({
+    const request = {
       path: '/' + this._list.name(),
       query: {
         filter: this._list.filter(),
         order: this._list.order(),
         page: this._index
       }
-    }, (response) => {
-      response.on('data', (data) => {
-        this._data = data;
-        callback(data);
-      });
-    }).end();
+    };
+
+    this._list.connection()
+      .request(request, (response) => this._select(response, callback))
+      .end();
   }
 
   change(action, diff) {
-    apply(this._data, diff);
+    this._data = apply(this._data, diff);
+  }
+
+  _bindConnection() {
+    this._list.connection().once('open', this._handleOpen);
+  }
+
+  _unbindConnection() {
+    this._list.connection().removeListener('open', this._handleOpen);
+  }
+
+  _open() {
+    if (this._data) {
+      this._data = null;
+      this.select();
+    }
+  }
+
+  _select(response, callback) {
+    response.once('data', (data) => {
+      const error = response.statusCode === 200 ?
+        null : new Error(response.statusCode);
+
+      if (response.statusCode === 200 && data) {
+        this._data = data;
+      }
+
+      if (callback) {
+        callback(error, data);
+      }
+    });
   }
 }

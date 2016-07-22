@@ -10,6 +10,7 @@ export default class ClientList extends EventEmitter {
     this._name = null;
     this._model = null;
     this._connection = null;
+    this._subscribed = null;
 
     this._filter = '';
     this._order = '';
@@ -17,6 +18,16 @@ export default class ClientList extends EventEmitter {
 
     this._meta = new Map();
     this._pages = new Map();
+
+    this._handleOpen = () => this._open();
+  }
+
+  destroy() {
+    this._unbindConnection();
+
+    if (this._subscribed) {
+      this.subscribe(false);
+    }
   }
 
   id(id) {
@@ -52,6 +63,8 @@ export default class ClientList extends EventEmitter {
     }
 
     this._connection = connection;
+    this._bindConnection();
+
     return this;
   }
 
@@ -82,11 +95,13 @@ export default class ClientList extends EventEmitter {
     return this;
   }
 
-  subscribe(action) {
+  subscribe(subscribed) {
+    this._subscribed = subscribed;
+
     this._connection.request({
       method: 'SUB',
       path: '/' + this._name
-    }).end(action);
+    }).end(subscribed);
 
     return this;
   }
@@ -145,56 +160,119 @@ export default class ClientList extends EventEmitter {
     }
 
     const pages = Object.keys(diff.pages);
+    let page = null;
 
     pages.forEach((index) => {
-      this._pages.get(Number(index)).change(action, diff.pages[index]);
+      page = this._pages.get(Number(index));
+
+      if (page) {
+        page.change(action, diff.pages[index]);
+      }
     });
 
     this.emit('change', action, pages);
     return this;
   }
 
+  _bindConnection() {
+    this._connection.addListener('open', this._handleOpen);
+  }
+
+  _unbindConnection() {
+    this._connection.removeListener('open', this._handleOpen);
+  }
+
   _groups(callback) {
     if (this._meta.has('groups')) {
-      callback(this._meta.get('groups'));
+      if (callback) {
+        callback(null, this._meta.get('groups'));
+      }
+
       return;
     }
 
-    this._connection.request({
+    const request = {
       path: '/' + this._name,
       query: {
         filter: this._filter,
         order: this._order,
         meta: 'groups'
       }
-    }, (response) => {
-      response.on('data', (data) => {
+    };
+
+    this._connection
+      .request(request, (response) => this.__groups(response, callback))
+      .end();
+  }
+
+  __groups(response, callback) {
+    response.once('data', (data) => {
+      const error = response.statusCode === 200 ?
+        null : new Error(response.statusCode);
+
+      if (response.statusCode === 200 && data) {
         this._count = data.count;
         this.groups(data.groups);
-        callback(data.groups);
-      });
-    }).end();
+      }
+
+      if (callback) {
+        callback(error, data.groups);
+      }
+    });
   }
 
   _total(callback) {
     if (this._meta.has('total')) {
-      callback(this._meta.get('total'));
+      if (callback) {
+        callback(this._meta.get('total'));
+      }
+
       return;
     }
 
-    this._connection.request({
+    const request = {
       path: '/' + this._name,
       query: {
         filter: this._filter,
         order: this._order,
         meta: 'total'
       }
-    }, (response) => {
-      response.on('data', (data) => {
+    };
+
+    this._connection
+      .request(request, (response) => this.__total(response, callback))
+      .end();
+  }
+
+  __total(response, callback) {
+    response.once('data', (data) => {
+      const error = response.statusCode === 200 ?
+        null : new Error(response.statusCode);
+
+      if (response.statusCode === 200 && data) {
         this._count = data.count;
         this.total(data.total);
-        callback(data.total);
-      });
-    }).end();
+      }
+
+      if (callback) {
+        callback(error, data.total);
+      }
+    });
+  }
+
+  _open() {
+    if (this._subscribed) {
+      this.subscribe(true);
+    }
+
+    if (this._meta.has('groups')) {
+      this._meta.delete('groups');
+      this._groups();
+    }
+
+    if (this._meta.has('total')) {
+      this._meta.delete('total');
+      this._total();
+    }
   }
 }

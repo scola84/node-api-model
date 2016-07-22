@@ -11,19 +11,11 @@ export default class ClientModel {
   }
 
   name(name) {
-    if (typeof name === 'undefined') {
-      return this._name;
-    }
-
     this._name = name;
     return this;
   }
 
   connection(connection) {
-    if (typeof connection === 'undefined') {
-      return this._connection;
-    }
-
     this._connection = connection;
     return this;
   }
@@ -53,14 +45,22 @@ export default class ClientModel {
 
   object(params, action) {
     if (typeof params === 'undefined') {
-      this._object = new ClientObjectModel()
-        .name(this._name)
-        .model(this)
-        .connection(this._connection);
+      if (!this._object) {
+        this._object = new ClientObjectModel()
+          .name(this._name)
+          .model(this)
+          .connection(this._connection);
+      }
+
       return this._object;
     }
 
-    if (action === false) {
+    if (action === 'insert') {
+      this._objects.set(params.id, params.object);
+      return this;
+    }
+
+    if (action === 'delete') {
       this._objects.delete(params.id);
       return this;
     }

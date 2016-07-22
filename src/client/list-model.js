@@ -8,28 +8,16 @@ export default class ClientListModel {
   }
 
   name(name) {
-    if (typeof name === 'undefined') {
-      return this._name;
-    }
-
     this._name = name;
     return this;
   }
 
   model(model) {
-    if (typeof model === 'undefined') {
-      return this._model;
-    }
-
     this._model = model;
     return this;
   }
 
   connection(connection) {
-    if (typeof connection === 'undefined') {
-      return this._connection;
-    }
-
     this._connection = connection;
     return this;
   }

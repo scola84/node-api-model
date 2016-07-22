@@ -3,30 +3,28 @@ import ServerPage from './page';
 
 export default class ServerList {
   constructor() {
-    this._model = null;
+    this._id = null;
+    this._name = null;
 
-    this._id = '';
+    this._select = null;
+    this._groups = null;
+    this._total = null;
+
     this._filter = '';
     this._order = '';
     this._count = 15;
-
-    this._groups = null;
-    this._total = null;
-    this._select = null;
 
     this._meta = new Map();
     this._pages = new Map();
 
     this._connections = new Set();
+    this._handleClose = (e, c) => this.subscribe(c, false);
   }
 
-  model(model) {
-    if (typeof model === 'undefined') {
-      return this._model;
-    }
-
-    this._model = model;
-    return this;
+  destroy() {
+    this._connections
+      .forEach((connection) => this._unbindConnection(connection));
+    this._connections.clear();
   }
 
   id(id) {
@@ -35,6 +33,15 @@ export default class ServerList {
     }
 
     this._id = id;
+    return this;
+  }
+
+  name(name) {
+    if (typeof name === 'undefined') {
+      return this._name;
+    }
+
+    this._name = name;
     return this;
   }
 
@@ -79,16 +86,6 @@ export default class ServerList {
     }
 
     this._select = callback;
-    return this;
-  }
-
-  subscribe(connection, action) {
-    if (action === true) {
-      this._connections.add(connection);
-    } else if (action === false) {
-      this._connections.delete(connection);
-    }
-
     return this;
   }
 
@@ -166,6 +163,17 @@ export default class ServerList {
     return this;
   }
 
+  subscribe(connection, action) {
+    if (action === true) {
+      this._connections.add(connection);
+      this._bindConnection(connection);
+    } else if (action === false) {
+      this._connections.delete(connection);
+    }
+
+    return this;
+  }
+
   page(index) {
     if (!this._pages.has(index)) {
       this._pages.set(index, new ServerPage()
@@ -177,24 +185,22 @@ export default class ServerList {
     return this._pages.get(index);
   }
 
-  change(action, diff, id) {
+  change(action, diff, id, callback) {
     this._changePages(action, diff, id, (pages) => {
       if (this._meta.has('groups')) {
-        this._changeGroups((groups) => {
-          this._notify(action, {
-            pages,
-            groups
-          });
-        });
+        this._changeGroups(action, pages, callback);
       } else if (this._meta.has('total')) {
-        this._changeTotal((total) => {
-          this._notify(action, {
-            pages,
-            total
-          });
-        });
+        this._changeTotal(action, pages, callback);
       }
     });
+  }
+
+  _bindConnection(connection) {
+    connection.once('close', this._handleClose);
+  }
+
+  _unbindConnection(connection) {
+    connection.removeListener('close', this._handleClose);
   }
 
   _parseFilter(filter) {
@@ -273,23 +279,48 @@ export default class ServerList {
         }
       });
     });
-
   }
 
-  _changeGroups(callback) {
+  _changeGroups(action, pages, callback) {
     const groups = this._meta.get('groups');
     this._meta.delete('groups');
 
     this.groups((error, data) => {
-      callback(odiff(groups, data.groups));
+      let diff = null;
+
+      if (!error) {
+        diff = {
+          pages,
+          groups: odiff(groups, data.groups)
+        };
+
+        this._notify(action, diff);
+      }
+
+      if (callback) {
+        callback(error, diff);
+      }
     });
   }
 
-  _changeTotal(callback) {
+  _changeTotal(action, pages, callback) {
     this._meta.delete('total');
 
     this.total((error, data) => {
-      callback(data.total);
+      let diff = null;
+
+      if (!error) {
+        diff = {
+          pages,
+          total: data.total
+        };
+
+        this._notify(action, diff);
+      }
+
+      if (callback) {
+        callback(error, diff);
+      }
     });
   }
 
@@ -297,7 +328,7 @@ export default class ServerList {
     this._connections.forEach((connection) => {
       connection.request({
         method: 'PUB',
-        path: '/' + this._model.name(),
+        path: '/' + this._name,
         query: {
           id: this._id
         }

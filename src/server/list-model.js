@@ -2,14 +2,14 @@ import ServerList from './list';
 
 export default class ServerListModel {
   constructor() {
-    this._model = null;
+    this._name = null;
     this._groups = null;
     this._total = null;
     this._select = null;
   }
 
-  model(model) {
-    this._model = model;
+  name(name) {
+    this._name = name;
     return this;
   }
 
@@ -31,11 +31,11 @@ export default class ServerListModel {
   create(id, params) {
     return new ServerList()
       .id(id)
-      .filter(params.filter)
-      .order(params.order)
-      .model(this._model)
+      .name(this._name)
       .groups(this._groups)
       .total(this._total)
-      .select(this._select);
+      .select(this._select)
+      .filter(params.filter)
+      .order(params.order);
   }
 }
