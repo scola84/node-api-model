@@ -1,5 +1,3 @@
-'use strict';
-
 function set(value, diff) {
   const path = [...diff.path];
   const end = path.pop();
@@ -28,7 +26,7 @@ function add(value, diff) {
     target = target[key];
   });
 
-  target.splice(diff.index, 0, diff.vals);
+  target.splice(diff.index, 0, ...diff.vals);
 
   return value;
 }
