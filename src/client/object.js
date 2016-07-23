@@ -226,7 +226,6 @@ export default class ClientObject extends EventEmitter {
 
       if (response.statusCode === 200 && data) {
         this._data = data;
-        console.log(this._data, data);
       }
 
       if (callback) {
