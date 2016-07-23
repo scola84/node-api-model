@@ -249,19 +249,17 @@ export default class ServerList {
     return terms;
   }
 
-  _parseOrder(order) {
-    let direction = '';
+  _parseOrder(orders) {
+    orders = orders.split(';');
 
-    if (order[0] === '-') {
-      direction = 'desc';
-    } else if (order[0] === '+') {
-      direction = 'asc';
-    }
+    return orders.map((order) => {
+      const [column, direction] = order.split(':');
 
-    return {
-      column: order.slice(1),
-      direction
-    };
+      return {
+        column,
+        direction
+      };
+    });
   }
 
   _changePages(action, diff, id, callback) {
