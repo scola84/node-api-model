@@ -250,7 +250,7 @@ export default class ServerList {
   }
 
   _parseOrder(orders) {
-    orders = orders.split(';');
+    orders = orders.length > 0 ? orders.split(';') : [];
 
     return orders.map((order) => {
       const [column, direction] = order.split(':');
