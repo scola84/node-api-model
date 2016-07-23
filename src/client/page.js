@@ -33,6 +33,10 @@ export default class ClientPage {
     return this;
   }
 
+  get(index) {
+    return this._data && this._data[index];
+  }
+
   select(callback) {
     if (this._data) {
       if (callback) {
