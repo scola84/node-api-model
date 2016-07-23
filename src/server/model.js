@@ -1,3 +1,4 @@
+import sha1 from 'sha1';
 import ServerListModel from './list-model';
 import ServerObjectModel from './object-model';
 
@@ -43,7 +44,7 @@ export default class ServerModel {
       order: ''
     }, params);
 
-    const id = params.id || params.filter + params.order;
+    const id = params.id || sha1(params.filter + params.order);
 
     if (!this._lists.has(id)) {
       this._lists.set(id, this._list.create(id, params));

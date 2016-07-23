@@ -1,3 +1,4 @@
+import sha1 from 'sha1';
 import ClientListModel from './list-model';
 import ClientObjectModel from './object-model';
 
@@ -34,7 +35,7 @@ export default class ClientModel {
       order: ''
     }, params);
 
-    const id = params.id || params.filter + params.order;
+    const id = params.id || sha1(params.filter + params.order);
 
     if (!this._lists.has(id)) {
       this._lists.set(id, this._list.create(id, params));
@@ -68,7 +69,6 @@ export default class ClientModel {
     }
 
     if (!this._objects.has(id)) {
-      console.log('not found', params.id);
       this._objects.set(id, this._object.create(id));
     }
 
