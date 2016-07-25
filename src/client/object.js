@@ -194,12 +194,12 @@ export default class ClientObject extends EventEmitter {
       const error = response.statusCode === 200 ?
         null : new Error(response.statusCode);
 
-      if (response.statusCode === 200 && data) {
+      if (response.statusCode === 200) {
         this._data = data;
       }
 
       if (callback) {
-        callback(error, data);
+        callback(error, this._data, this);
       }
     });
   }
@@ -209,8 +209,8 @@ export default class ClientObject extends EventEmitter {
       const error = response.statusCode === 201 ?
         null : new Error(response.statusCode);
 
-      if (response.statusCode === 201 && data) {
-        this._id = data.id;
+      if (response.statusCode === 201) {
+        this._id = response.headers.id;
         this._data = data;
 
         this._model.object({
@@ -220,7 +220,7 @@ export default class ClientObject extends EventEmitter {
       }
 
       if (callback) {
-        callback(error, data);
+        callback(error, this._data, this);
       }
     });
   }
@@ -230,12 +230,12 @@ export default class ClientObject extends EventEmitter {
       const error = response.statusCode === 200 ?
         null : new Error(response.statusCode);
 
-      if (response.statusCode === 200 && data) {
+      if (response.statusCode === 200) {
         this._data = data;
       }
 
       if (callback) {
-        callback(error, data);
+        callback(error, this._data, this);
       }
     });
   }
@@ -246,7 +246,7 @@ export default class ClientObject extends EventEmitter {
         null : new Error(response.statusCode);
 
       if (callback) {
-        callback(error);
+        callback(error, this._data, this);
       }
     });
   }

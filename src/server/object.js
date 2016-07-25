@@ -91,8 +91,8 @@ export default class ServerObject {
       return this._data && this._data[name];
     }
 
-    return this.select((data) => {
-      callback(data && data[name]);
+    return this.select((error, data) => {
+      callback(error, data && data[name]);
     });
   }
 
@@ -122,7 +122,7 @@ export default class ServerObject {
 
     if (this._data) {
       if (callback) {
-        callback(null, this._data);
+        callback(null, this._data, this);
       }
 
       return this;
@@ -134,7 +134,7 @@ export default class ServerObject {
         this._copy = Object.assign({}, data);
       }
 
-      callback(error, data);
+      callback(error, this._data, this);
     });
 
     return this;
@@ -149,7 +149,6 @@ export default class ServerObject {
     this._insert(this._data, (error, id) => {
       if (!error) {
         this._id = id;
-        this._data.id = id;
 
         this._model.object({
           id,
@@ -162,7 +161,7 @@ export default class ServerObject {
       }
 
       if (callback) {
-        callback(error, this._data, id);
+        callback(error, this._data, this);
       }
     });
 
@@ -192,7 +191,7 @@ export default class ServerObject {
       }
 
       if (callback) {
-        callback(error, this._data);
+        callback(error, this._data, this);
       }
     });
 
@@ -211,7 +210,7 @@ export default class ServerObject {
       }
 
       if (callback) {
-        callback(error);
+        callback(error, this._data, this);
       }
     });
 
