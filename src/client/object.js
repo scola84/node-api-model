@@ -158,7 +158,7 @@ export default class ClientObject extends EventEmitter {
   }
 
   change(action, diff) {
-    this.emit('change', action);
+    this.emit('change', action, diff);
 
     if (action === 'update') {
       this._data = apply(Object.assign({}, this._data), diff);
