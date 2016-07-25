@@ -218,6 +218,8 @@ export default class ServerObject {
   }
 
   change(action, diff) {
+    this._notifyClients(action, diff);
+
     if (action === 'update') {
       this._data = apply(Object.assign({}, this._data), diff);
       this._copy = Object.assign({}, this._data);
@@ -227,7 +229,6 @@ export default class ServerObject {
       this.destroy();
     }
 
-    this._notifyClients(action, diff);
     return this;
   }
 

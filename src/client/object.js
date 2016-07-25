@@ -168,7 +168,6 @@ export default class ClientObject extends EventEmitter {
       this._subscribed = false;
       this.destroy();
     }
-
   }
 
   _bindConnection() {
