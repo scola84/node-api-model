@@ -129,6 +129,10 @@ export default class ServerObject {
     }
 
     this._select(this._id, (error, data) => {
+      if (!data) {
+        error = new Error('404 object_not_found');
+      }
+
       if (!error) {
         this._data = Object.assign({}, data);
         this._copy = Object.assign({}, data);
@@ -175,7 +179,7 @@ export default class ServerObject {
     }
 
     if (!this._copy) {
-      return callback(new Error('Object not loaded'));
+      return callback(new Error('404 object_not_loaded'));
     }
 
     this._update(this._id, this._data, (error) => {

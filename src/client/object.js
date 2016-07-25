@@ -192,7 +192,7 @@ export default class ClientObject extends EventEmitter {
   _select(response, callback) {
     response.once('data', (data) => {
       const error = response.statusCode === 200 ?
-        null : new Error(response.statusCode);
+        null : new Error(data);
 
       if (response.statusCode === 200) {
         this._data = data;
@@ -207,7 +207,7 @@ export default class ClientObject extends EventEmitter {
   _insert(response, callback) {
     response.once('data', (data) => {
       const error = response.statusCode === 201 ?
-        null : new Error(response.statusCode);
+        null : new Error(data);
 
       if (response.statusCode === 201) {
         this._id = response.headers.id;
@@ -228,7 +228,7 @@ export default class ClientObject extends EventEmitter {
   _update(response, callback) {
     response.once('data', (data) => {
       const error = response.statusCode === 200 ?
-        null : new Error(response.statusCode);
+        null : new Error(data);
 
       if (response.statusCode === 200) {
         this._data = data;
@@ -241,9 +241,9 @@ export default class ClientObject extends EventEmitter {
   }
 
   _delete(response, callback) {
-    response.once('data', () => {
+    response.once('data', (data) => {
       const error = response.statusCode === 200 ?
-        null : new Error(response.statusCode);
+        null : new Error(data);
 
       if (callback) {
         callback(error, this._data, this);

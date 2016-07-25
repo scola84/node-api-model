@@ -215,9 +215,9 @@ export default class ClientList extends EventEmitter {
   __groups(response, callback) {
     response.once('data', (data) => {
       const error = response.statusCode === 200 ?
-        null : new Error(response.statusCode);
+        null : new Error(data);
 
-      if (response.statusCode === 200 && data) {
+      if (response.statusCode === 200) {
         this._count = data.count;
         this.groups(data.groups);
       }
@@ -254,9 +254,9 @@ export default class ClientList extends EventEmitter {
   __total(response, callback) {
     response.once('data', (data) => {
       const error = response.statusCode === 200 ?
-        null : new Error(response.statusCode);
+        null : new Error(data);
 
-      if (response.statusCode === 200 && data) {
+      if (response.statusCode === 200) {
         this._count = data.count;
         this.total(data.total);
       }

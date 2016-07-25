@@ -82,9 +82,9 @@ export default class ClientPage {
   _select(response, callback) {
     response.once('data', (data) => {
       const error = response.statusCode === 200 ?
-        null : new Error(response.statusCode);
+        null : new Error(data);
 
-      if (response.statusCode === 200 && data) {
+      if (response.statusCode === 200) {
         this._data = data;
       }
 
