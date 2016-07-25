@@ -55,12 +55,14 @@ export default class ServerModel {
 
   object(params, action) {
     if (typeof params === 'undefined') {
-      if (!this._object) {
-        this._object = new ServerObjectModel()
-          .name(this._name)
-          .model(this)
-          .connection(this._connection);
+      if (this._object) {
+        return this._object.create(null);
       }
+
+      this._object = new ServerObjectModel()
+        .name(this._name)
+        .model(this)
+        .connection(this._connection);
 
       return this._object;
     }

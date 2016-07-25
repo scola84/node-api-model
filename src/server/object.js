@@ -149,6 +149,7 @@ export default class ServerObject {
     this._insert(this._data, (error, id) => {
       if (!error) {
         this._id = id;
+        this._data.id = id;
 
         this._model.object({
           id,

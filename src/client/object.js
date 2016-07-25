@@ -210,7 +210,13 @@ export default class ClientObject extends EventEmitter {
         null : new Error(response.statusCode);
 
       if (response.statusCode === 201 && data) {
+        this._id = data.id;
         this._data = data;
+
+        this._model.object({
+          id: this._id,
+          object: this
+        }, 'insert');
       }
 
       if (callback) {
