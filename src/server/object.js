@@ -205,14 +205,8 @@ export default class ServerObject {
     }
 
     this._delete(this._id, (error) => {
-      if (!error) {
-        this._model.object({
-          id: this._id
-        }, 'delete');
-
-        if (this._connection) {
-          this._notifyPeers('delete');
-        }
+      if (!error && this._connection) {
+        this._notifyPeers('delete');
       }
 
       if (callback) {

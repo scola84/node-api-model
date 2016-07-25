@@ -158,6 +158,8 @@ export default class ClientObject extends EventEmitter {
   }
 
   change(action, diff) {
+    this.emit('change', action);
+
     if (action === 'update') {
       this._data = apply(Object.assign({}, this._data), diff);
     }
@@ -167,7 +169,6 @@ export default class ClientObject extends EventEmitter {
       this.destroy();
     }
 
-    this.emit('change', action);
   }
 
   _bindConnection() {
@@ -236,7 +237,7 @@ export default class ClientObject extends EventEmitter {
 
   _delete(response, callback) {
     response.once('data', () => {
-      const error = response.statusCode === 201 ?
+      const error = response.statusCode === 200 ?
         null : new Error(response.statusCode);
 
       if (callback) {
