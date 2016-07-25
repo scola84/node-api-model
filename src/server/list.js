@@ -190,9 +190,9 @@ export default class ServerList {
   change(action, diff, id, callback) {
     this._changePages(action, diff, id, (pageDiffs) => {
       if (this._meta.has('groups')) {
-        this._changeGroups(action, pageDiffs, callback);
+        this._changeGroups(action, pageDiffs, id, callback);
       } else if (this._meta.has('total')) {
-        this._changeTotal(action, pageDiffs, callback);
+        this._changeTotal(action, pageDiffs, id, callback);
       }
     });
   }
@@ -282,7 +282,7 @@ export default class ServerList {
     });
   }
 
-  _changeGroups(action, pageDiffs, callback) {
+  _changeGroups(action, pageDiffs, id, callback) {
     const groups = this._meta.get('groups');
     this._meta.delete('groups');
 
@@ -291,6 +291,7 @@ export default class ServerList {
 
       if (!error) {
         diff = {
+          id,
           pages: pageDiffs,
           groups: odiff(groups, data.groups)
         };
@@ -304,7 +305,7 @@ export default class ServerList {
     });
   }
 
-  _changeTotal(action, pageDiffs, callback) {
+  _changeTotal(action, pageDiffs, id, callback) {
     this._meta.delete('total');
 
     this.total((error, data) => {
@@ -312,6 +313,7 @@ export default class ServerList {
 
       if (!error) {
         diff = {
+          id,
           pages: pageDiffs,
           total: data.total
         };

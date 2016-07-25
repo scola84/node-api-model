@@ -177,7 +177,7 @@ export default class ClientList extends EventEmitter {
       }
     });
 
-    this.emit('change', action, indices);
+    this.emit('change', action, indices, diff.id);
     return this;
   }
 
