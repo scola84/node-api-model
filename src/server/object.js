@@ -152,7 +152,7 @@ export default class ServerObject {
       return this;
     }
 
-    this._validate('insert', this._data, (validateError) => {
+    this._validate(this._data, (validateError) => {
       if (validateError) {
         if (callback) {
           callback(new Error('400 not_valid ' +
@@ -180,7 +180,7 @@ export default class ServerObject {
           callback(insertError, this._data, this);
         }
       });
-    });
+    }, 'insert');
 
     return this;
   }
@@ -195,7 +195,7 @@ export default class ServerObject {
       return callback(new Error('404 not_loaded'));
     }
 
-    this._validate('update', this._data, (validateError) => {
+    this._validate(this._data, (validateError) => {
       if (validateError) {
         if (callback) {
           callback(new Error('400 not_valid ' +
@@ -221,7 +221,7 @@ export default class ServerObject {
           callback(error, this._data, this);
         }
       });
-    });
+    }, 'update');
 
     return this;
   }

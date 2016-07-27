@@ -126,7 +126,7 @@ export default class ClientObject extends EventEmitter {
   }
 
   insert(callback) {
-    this._validate('insert', this._data, (error) => {
+    this._validate(this._data, (error) => {
       if (error) {
         if (callback) {
           callback(error);
@@ -144,11 +144,11 @@ export default class ClientObject extends EventEmitter {
         .request(request, (response) =>
           this._insert(response, callback))
         .end(this._data);
-    });
+    }, 'insert');
   }
 
   update(callback) {
-    this._validate('update', this._data, (error) => {
+    this._validate(this._data, (error) => {
       if (error) {
         if (callback) {
           callback(error);
@@ -166,8 +166,7 @@ export default class ClientObject extends EventEmitter {
         .request(request, (response) =>
           this._update(response, callback))
         .end(this._data);
-    });
-
+    }, 'update');
   }
 
   delete(callback) {
