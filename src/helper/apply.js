@@ -43,7 +43,7 @@ function remove(value, diff) {
   return value;
 }
 
-export default function apply(value, diffs) {
+export default function applyDiff(value, diffs) {
   diffs.forEach((diff) => {
     switch (diff.type) {
       case 'set':

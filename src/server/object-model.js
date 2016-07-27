@@ -5,8 +5,10 @@ export default class ServerObjectModel {
     this._name = null;
     this._model = null;
     this._connection = null;
-    this._authorize = null;
-    this._validate = null;
+
+    this._authorize = (c) => c();
+    this._validate = (a, d, c) => c();
+
     this._select = null;
     this._insert = null;
     this._update = null;

@@ -118,32 +118,56 @@ export default class ClientObject extends EventEmitter {
     };
 
     this._connection
-      .request(request, (response) => this._select(response, callback))
+      .request(request, (response) =>
+        this._select(response, callback))
       .end();
 
     return this;
   }
 
   insert(callback) {
-    const request = {
-      method: 'POST',
-      path: '/' + this._name
-    };
+    this._validate('insert', this._data, (error) => {
+      if (error) {
+        if (callback) {
+          callback(error);
+        }
 
-    this._connection
-      .request(request, (response) => this._insert(response, callback))
-      .end(this._data);
+        return;
+      }
+
+      const request = {
+        method: 'POST',
+        path: '/' + this._name
+      };
+
+      this._connection
+        .request(request, (response) =>
+          this._insert(response, callback))
+        .end(this._data);
+    });
   }
 
   update(callback) {
-    const request = {
-      method: 'PUT',
-      path: '/' + this._name + '/' + this._id
-    };
+    this._validate('update', this._data, (error) => {
+      if (error) {
+        if (callback) {
+          callback(error);
+        }
 
-    this._connection
-      .request(request, (response) => this._update(response, callback))
-      .end(this._data);
+        return;
+      }
+
+      const request = {
+        method: 'PUT',
+        path: '/' + this._name + '/' + this._id
+      };
+
+      this._connection
+        .request(request, (response) =>
+          this._update(response, callback))
+        .end(this._data);
+    });
+
   }
 
   delete(callback) {
@@ -153,7 +177,8 @@ export default class ClientObject extends EventEmitter {
     };
 
     this._connection
-      .request(request, (response) => this._delete(response, callback))
+      .request(request, (response) =>
+        this._delete(response, callback))
       .end();
   }
 

@@ -1,5 +1,6 @@
 import odiff from 'odiff';
-import apply from '../helper/apply';
+import applyDiff from '../helper/apply';
+import formatError from '../helper/format-error-api';
 
 export default class ServerObject {
   constructor() {
@@ -19,6 +20,7 @@ export default class ServerObject {
     this._copy = null;
 
     this._connections = new Set();
+
     this._handleClose = (e, c) => this.subscribe(c, false);
   }
 
@@ -130,7 +132,7 @@ export default class ServerObject {
 
     this._select(this._id, (error, data) => {
       if (!data) {
-        error = new Error('404 object_not_found');
+        error = new Error('404 not_found');
       }
 
       if (!error) {
@@ -150,23 +152,34 @@ export default class ServerObject {
       return this;
     }
 
-    this._insert(this._data, (error, id) => {
-      if (!error) {
-        this._id = id;
-
-        this._model.object({
-          id,
-          object: this
-        }, 'insert');
-
-        if (this._connection) {
-          this._notifyPeers('insert');
+    this._validate('insert', this._data, (validateError) => {
+      if (validateError) {
+        if (callback) {
+          callback(new Error('400 not_valid ' +
+            formatError(validateError)));
         }
+
+        return;
       }
 
-      if (callback) {
-        callback(error, this._data, this);
-      }
+      this._insert(this._data, (insertError, id) => {
+        if (!insertError) {
+          this._id = id;
+
+          this._model.object({
+            id,
+            object: this
+          }, 'insert');
+
+          if (this._connection) {
+            this._notifyPeers('insert');
+          }
+        }
+
+        if (callback) {
+          callback(insertError, this._data, this);
+        }
+      });
     });
 
     return this;
@@ -179,24 +192,35 @@ export default class ServerObject {
     }
 
     if (!this._copy) {
-      return callback(new Error('404 object_not_loaded'));
+      return callback(new Error('404 not_loaded'));
     }
 
-    this._update(this._id, this._data, (error) => {
-      let diff = null;
-
-      if (!error) {
-        diff = odiff(this._copy, this._data);
-        this._copy = Object.assign({}, this._data);
-
-        if (this._connection) {
-          this._notifyPeers('update', diff);
+    this._validate('update', this._data, (validateError) => {
+      if (validateError) {
+        if (callback) {
+          callback(new Error('400 not_valid ' +
+            formatError(validateError)));
         }
+
+        return;
       }
 
-      if (callback) {
-        callback(error, this._data, this);
-      }
+      this._update(this._id, this._data, (error) => {
+        let diff = null;
+
+        if (!error) {
+          diff = odiff(this._copy, this._data);
+          this._copy = Object.assign({}, this._data);
+
+          if (this._connection) {
+            this._notifyPeers('update', diff);
+          }
+        }
+
+        if (callback) {
+          callback(error, this._data, this);
+        }
+      });
     });
 
     return this;
@@ -225,7 +249,7 @@ export default class ServerObject {
     this._notifyClients(action, diff);
 
     if (action === 'update') {
-      this._data = apply(Object.assign({}, this._data), diff);
+      this._data = applyDiff(Object.assign({}, this._data), diff);
       this._copy = Object.assign({}, this._data);
     }
 

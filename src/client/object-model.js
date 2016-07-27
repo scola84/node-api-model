@@ -5,7 +5,8 @@ export default class ClientObjectModel {
     this._name = null;
     this._model = null;
     this._connection = null;
-    this._validate = null;
+
+    this._validate = (a, d, c) => c();
   }
 
   name(name) {
