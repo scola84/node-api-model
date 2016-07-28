@@ -220,7 +220,7 @@ export default class ServerList {
     const groups = this._meta.get('groups');
     this._meta.delete('groups');
 
-    this.groups((error, data) => {
+    this.groups().execute((error, data) => {
       let diff = null;
 
       if (!error) {
@@ -242,7 +242,7 @@ export default class ServerList {
   _changeTotal(action, pageDiffs, id, callback) {
     this._meta.delete('total');
 
-    this.total((error, data) => {
+    this.total().execute((error, data) => {
       let diff = null;
 
       if (!error) {

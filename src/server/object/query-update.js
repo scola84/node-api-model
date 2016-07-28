@@ -24,7 +24,7 @@ export default class UpdateQuery extends Query {
     request.removeAllListeners();
 
     const changed = Object.assign({}, this._object.data(), data);
-    const diff = odiff(changed, this._object.data());
+    const diff = odiff(this._object.data(), changed);
 
     if (diff.length === 0) {
       if (callback) {

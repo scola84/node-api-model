@@ -3,7 +3,7 @@ import Query from './query';
 export default class DeleteQuery extends Query {
   execute(request, callback) {
     this._query(request, (error) => {
-      this.handleQuery(error, callback);
+      this._handleQuery(error, callback);
     });
   }
 

@@ -131,7 +131,7 @@ export default class ClientObject extends EventEmitter {
 
   update(data, callback) {
     const changed = Object.assign({}, this._data, data);
-    const diff = odiff(changed, this._data);
+    const diff = odiff(this._data, changed);
 
     if (diff.length === 0) {
       if (callback) {

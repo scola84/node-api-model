@@ -98,70 +98,70 @@ export default class ServerObject {
     return this;
   }
 
-  subscribe(request, action) {
+  subscribe(connection, action) {
     if (action === true) {
-      this._connections.add(request.connection);
-      this._bindConnection(request.connection);
+      this._connections.add(connection);
+      this._bindConnection(connection);
     } else if (action === false) {
-      this._connections.delete(request.connection);
+      this._connections.delete(connection);
     }
 
     return this;
   }
 
-  select(select) {
-    if (typeof select === 'undefined') {
+  select(query) {
+    if (typeof query === 'undefined') {
       return this._select;
     }
 
-    if (typeof select === 'function') {
+    if (typeof query === 'function') {
       this._select = new SelectQuery()
         .object(this)
-        .query(select);
+        .query(query);
     }
 
     return this;
   }
 
-  insert(insert) {
-    if (typeof insert === 'undefined') {
+  insert(query) {
+    if (typeof query === 'undefined') {
       return this._insert;
     }
 
-    if (typeof insert === 'function') {
+    if (typeof query === 'function') {
       this._insert = new InsertQuery()
         .object(this)
-        .query(insert)
+        .query(query)
         .validate(this._validate);
     }
 
     return this;
   }
 
-  update(update) {
-    if (typeof update === 'undefined') {
+  update(query) {
+    if (typeof query === 'undefined') {
       return this._update;
     }
 
-    if (typeof update === 'function') {
+    if (typeof query === 'function') {
       this._update = new UpdateQuery()
         .object(this)
-        .query(update)
+        .query(query)
         .validate(this._validate);
     }
 
     return this;
   }
 
-  delete(del) {
-    if (typeof del === 'undefined') {
+  delete(query) {
+    if (typeof query === 'undefined') {
       return this._delete;
     }
 
-    if (typeof del === 'function') {
+    if (typeof query === 'function') {
       this._delete = new DeleteQuery()
         .object(this)
-        .query(del);
+        .query(query);
     }
 
     return this;
