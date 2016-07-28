@@ -1,6 +1,5 @@
 import odiff from 'odiff';
-import applyDiff from '../helper/apply';
-import formatError from '../helper/format-error-api';
+import applyDiff from '../helper/apply-diff';
 
 export default class ServerObject {
   constructor() {
@@ -17,10 +16,8 @@ export default class ServerObject {
     this._delete = null;
 
     this._data = null;
-    this._copy = null;
 
     this._connections = new Set();
-
     this._handleClose = (e, c) => this.subscribe(c, false);
   }
 
@@ -88,35 +85,18 @@ export default class ServerObject {
     return this;
   }
 
-  get(name, callback) {
-    if (typeof callback === 'undefined') {
-      return this._data && this._data[name];
-    }
-
-    return this.select((error, data) => {
-      callback(error, data && data[name]);
-    });
-  }
-
-  set(name, value) {
-    this._data = this._data || {};
-    this._data[name] = value;
-
-    return this;
-  }
-
-  subscribe(connection, action) {
+  subscribe(request, action) {
     if (action === true) {
-      this._connections.add(connection);
-      this._bindConnection(connection);
+      this._connections.add(request.connection);
+      this._bindConnection(request.connection);
     } else if (action === false) {
-      this._connections.delete(connection);
+      this._connections.delete(request.connection);
     }
 
     return this;
   }
 
-  select(callback) {
+  select(request, callback) {
     if (!this._select) {
       this._select = callback;
       return this;
@@ -130,14 +110,13 @@ export default class ServerObject {
       return this;
     }
 
-    this._select(this._id, (error, data) => {
-      if (!data) {
+    this._select(request, (error, data) => {
+      if (!error && !data) {
         error = new Error('404 not_found');
       }
 
       if (!error) {
         this._data = Object.assign({}, data);
-        this._copy = Object.assign({}, data);
       }
 
       callback(error, this._data, this);
@@ -146,93 +125,100 @@ export default class ServerObject {
     return this;
   }
 
-  insert(callback) {
+  insert(request, callback) {
     if (!this._insert) {
       this._insert = callback;
       return this;
     }
 
-    this._validate(this._data, (validateError) => {
-      if (validateError) {
-        if (callback) {
-          callback(new Error('400 not_valid ' +
-            formatError(validateError)));
-        }
-
-        return;
-      }
-
-      this._insert(this._data, (insertError, id) => {
-        if (!insertError) {
-          this._id = id;
-
-          this._model.object({
-            id,
-            object: this
-          }, 'insert');
-
-          if (this._connection) {
-            this._notifyPeers('insert');
+    request.on('data', (data) => {
+      this._validate(request, data, (validateError) => {
+        if (validateError) {
+          if (callback) {
+            callback(validateError);
           }
+
+          return;
         }
 
-        if (callback) {
-          callback(insertError, this._data, this);
-        }
-      });
-    }, 'insert');
+        this._insert(request, data, (insertError, id) => {
+          if (!insertError) {
+            this._id = id;
+            this._data = data;
+
+            this._model.object({
+              id,
+              object: this
+            }, 'insert');
+
+            if (this._connection) {
+              this._notifyPeers('insert');
+            }
+          }
+
+          if (callback) {
+            callback(insertError, this._data, this);
+          }
+        });
+      }, 'insert');
+    });
 
     return this;
   }
 
-  update(callback) {
+  update(request, callback) {
     if (!this._update) {
       this._update = callback;
       return this;
     }
 
-    if (!this._copy) {
-      return callback(new Error('404 not_loaded'));
-    }
+    request.on('data', (data) => {
+      const changed = Object.assign({}, this._data, data);
+      const diff = odiff(changed, this._data);
 
-    this._validate(this._data, (validateError) => {
-      if (validateError) {
+      if (diff.length === 0) {
         if (callback) {
-          callback(new Error('400 not_valid ' +
-            formatError(validateError)));
+          callback();
         }
 
         return;
       }
 
-      this._update(this._id, this._data, (error) => {
-        let diff = null;
-
-        if (!error) {
-          diff = odiff(this._copy, this._data);
-          this._copy = Object.assign({}, this._data);
-
-          if (this._connection) {
-            this._notifyPeers('update', diff);
+      this._validate(request, changed, (validateError) => {
+        if (validateError) {
+          if (callback) {
+            callback(validateError);
           }
+
+          return;
         }
 
-        if (callback) {
-          callback(error, this._data, this);
-        }
-      });
-    }, 'update');
+        this._update(request, changed, (updateError) => {
+          if (!updateError) {
+            this._data = changed;
+
+            if (this._connection) {
+              this._notifyPeers('update', diff);
+            }
+          }
+
+          if (callback) {
+            callback(updateError, this._data, this);
+          }
+        });
+      }, 'update');
+    });
 
     return this;
   }
 
-  delete(callback) {
+  delete(request, callback) {
     if (!this._delete) {
       this._delete = callback;
       return this;
     }
 
-    this._delete(this._id, (error) => {
+    this._delete(request, (error) => {
       if (!error && this._connection) {
         this._notifyPeers('delete');
       }
@@ -250,7 +236,6 @@ export default class ServerObject {
 
     if (action === 'update') {
       this._data = applyDiff(Object.assign({}, this._data), diff);
-      this._copy = Object.assign({}, this._data);
     }
 
     if (action === 'delete') {

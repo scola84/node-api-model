@@ -1,4 +1,4 @@
-import apply from '../helper/apply';
+import applyDiff from '../helper/apply-diff';
 
 export default class ClientPage {
   constructor() {
@@ -61,7 +61,7 @@ export default class ClientPage {
   }
 
   change(action, diff) {
-    this._data = apply(this._data, diff);
+    this._data = applyDiff(this._data, diff);
   }
 
   _bindConnection() {

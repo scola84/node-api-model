@@ -1,5 +1,6 @@
 import EventEmitter from 'events';
-import apply from '../helper/apply';
+import odiff from 'odiff';
+import applyDiff from '../helper/apply-diff';
 
 export default class ClientObject extends EventEmitter {
   constructor() {
@@ -76,23 +77,6 @@ export default class ClientObject extends EventEmitter {
     return this;
   }
 
-  get(name, callback) {
-    if (typeof callback === 'undefined') {
-      return this._data && this._data[name];
-    }
-
-    return this.select((error, data) => {
-      callback(error, data && data[name]);
-    });
-  }
-
-  set(name, value) {
-    this._data = this._data || {};
-    this._data[name] = value;
-
-    return this;
-  }
-
   subscribe(subscribed) {
     this._subscribed = subscribed;
 
@@ -118,15 +102,14 @@ export default class ClientObject extends EventEmitter {
     };
 
     this._connection
-      .request(request, (response) =>
-        this._select(response, callback))
+      .request(request, (response) => this._select(response, callback))
       .end();
 
     return this;
   }
 
-  insert(callback) {
-    this._validate(this._data, (error) => {
+  insert(data, callback) {
+    this._validate(data, (error) => {
       if (error) {
         if (callback) {
           callback(error);
@@ -141,14 +124,24 @@ export default class ClientObject extends EventEmitter {
       };
 
       this._connection
-        .request(request, (response) =>
-          this._insert(response, callback))
-        .end(this._data);
+        .request(request, (response) => this._insert(response, callback))
+        .end(data);
     }, 'insert');
   }
 
-  update(callback) {
-    this._validate(this._data, (error) => {
+  update(data, callback) {
+    const changed = Object.assign({}, this._data, data);
+    const diff = odiff(changed, this._data);
+
+    if (diff.length === 0) {
+      if (callback) {
+        callback();
+      }
+
+      return;
+    }
+
+    this._validate(changed, (error) => {
       if (error) {
         if (callback) {
           callback(error);
@@ -163,9 +156,8 @@ export default class ClientObject extends EventEmitter {
       };
 
       this._connection
-        .request(request, (response) =>
-          this._update(response, callback))
-        .end(this._data);
+        .request(request, (response) => this._update(response, callback))
+        .end(changed);
     }, 'update');
   }
 
@@ -176,8 +168,7 @@ export default class ClientObject extends EventEmitter {
     };
 
     this._connection
-      .request(request, (response) =>
-        this._delete(response, callback))
+      .request(request, (response) => this._delete(response, callback))
       .end();
   }
 
@@ -185,7 +176,7 @@ export default class ClientObject extends EventEmitter {
     this.emit('change', action, diff);
 
     if (action === 'update') {
-      this._data = apply(Object.assign({}, this._data), diff);
+      this._data = applyDiff(Object.assign({}, this._data), diff);
     }
 
     if (action === 'delete') {

@@ -5,6 +5,8 @@ export default class ClientListModel {
     this._name = null;
     this._model = null;
     this._connection = null;
+
+    this._validate = (d, c) => c();
   }
 
   name(name) {
@@ -22,12 +24,18 @@ export default class ClientListModel {
     return this;
   }
 
+  validate(validate) {
+    this._validate = validate;
+    return this;
+  }
+
   create(id, params) {
     return new ClientList()
       .id(id)
       .name(this._name)
       .model(this._model)
       .connection(this._connection)
+      .validate(this._validate)
       .filter(params.filter)
       .order(params.order);
   }

@@ -1,6 +1,8 @@
 import EventEmitter from 'events';
 import ClientPage from './page';
-import apply from '../helper/apply';
+import applyDiff from '../helper/apply-diff';
+import parseFilter from '../helper/parse-filter';
+import parseOrder from '../helper/parse-order';
 
 export default class ClientList extends EventEmitter {
   constructor() {
@@ -10,6 +12,7 @@ export default class ClientList extends EventEmitter {
     this._name = null;
     this._model = null;
     this._connection = null;
+    this._validate = null;
     this._subscribed = null;
 
     this._filter = '';
@@ -68,7 +71,20 @@ export default class ClientList extends EventEmitter {
     return this;
   }
 
+  validate(validate) {
+    if (typeof validate === 'undefined') {
+      return this._validate;
+    }
+
+    this._validate = validate;
+    return this;
+  }
+
   filter(filter) {
+    if (filter === true) {
+      return parseFilter(this._filter);
+    }
+
     if (typeof filter === 'undefined') {
       return this._filter;
     }
@@ -78,6 +94,10 @@ export default class ClientList extends EventEmitter {
   }
 
   order(order) {
+    if (order === true) {
+      return parseOrder(this._order);
+    }
+
     if (typeof order === 'undefined') {
       return this._order;
     }
@@ -160,7 +180,7 @@ export default class ClientList extends EventEmitter {
 
   change(action, diff) {
     if (diff.groups) {
-      this.groups(apply(this._meta.get('groups'), diff.groups));
+      this.groups(applyDiff(this._meta.get('groups'), diff.groups));
     } else if (diff.total) {
       this.total(diff.total);
     }
@@ -192,24 +212,39 @@ export default class ClientList extends EventEmitter {
   _groups(callback) {
     if (this._meta.has('groups')) {
       if (callback) {
-        callback(null, this._meta.get('groups'));
+        callback(null, this._meta.get('groups'), this);
       }
 
       return;
     }
 
-    const request = {
-      path: '/' + this._name,
-      query: {
-        filter: this._filter,
-        order: this._order,
-        meta: 'groups'
-      }
+    const parameters = {
+      filter: this.filter(true),
+      order: this.order(true)
     };
 
-    this._connection
-      .request(request, (response) => this.__groups(response, callback))
-      .end();
+    this._validate(parameters, (error) => {
+      if (error) {
+        if (callback) {
+          callback(error);
+        }
+
+        return;
+      }
+
+      const request = {
+        path: '/' + this._name,
+        query: {
+          filter: this._filter,
+          order: this._order,
+          meta: 'groups'
+        }
+      };
+
+      this._connection
+        .request(request, (response) => this.__groups(response, callback))
+        .end();
+    });
   }
 
   __groups(response, callback) {
@@ -223,7 +258,7 @@ export default class ClientList extends EventEmitter {
       }
 
       if (callback) {
-        callback(error, data.groups);
+        callback(error, data.groups, this);
       }
     });
   }
@@ -237,18 +272,33 @@ export default class ClientList extends EventEmitter {
       return;
     }
 
-    const request = {
-      path: '/' + this._name,
-      query: {
-        filter: this._filter,
-        order: this._order,
-        meta: 'total'
-      }
+    const parameters = {
+      filter: this.filter(true),
+      order: this.order(true)
     };
 
-    this._connection
-      .request(request, (response) => this.__total(response, callback))
-      .end();
+    this._validate(parameters, (error) => {
+      if (error) {
+        if (callback) {
+          callback(error);
+        }
+
+        return;
+      }
+
+      const request = {
+        path: '/' + this._name,
+        query: {
+          filter: this._filter,
+          order: this._order,
+          meta: 'total'
+        }
+      };
+
+      this._connection
+        .request(request, (response) => this.__total(response, callback))
+        .end();
+    });
   }
 
   __total(response, callback) {

@@ -1,10 +1,13 @@
 import odiff from 'odiff';
 import ServerPage from './page';
+import parseFilter from '../helper/parse-filter';
+import parseOrder from '../helper/parse-order';
 
 export default class ServerList {
   constructor() {
     this._id = null;
     this._name = null;
+    this._validate = null;
 
     this._select = null;
     this._groups = null;
@@ -45,9 +48,18 @@ export default class ServerList {
     return this;
   }
 
+  validate(validate) {
+    if (typeof validate === 'undefined') {
+      return this._validate;
+    }
+
+    this._validate = validate;
+    return this;
+  }
+
   filter(filter) {
     if (filter === true) {
-      return this._parseFilter(this._filter);
+      return parseFilter(this._filter);
     }
 
     if (typeof filter === 'undefined') {
@@ -60,7 +72,7 @@ export default class ServerList {
 
   order(order) {
     if (order === true) {
-      return this._parseOrder(this._order);
+      return parseOrder(this._order);
     }
 
     if (typeof order === 'undefined') {
@@ -96,10 +108,12 @@ export default class ServerList {
     }
 
     if (this._meta.has('groups')) {
-      callback(null, {
-        count: this._count,
-        groups: this._meta.get('groups')
-      });
+      if (callback) {
+        callback(null, {
+          count: this._count,
+          groups: this._meta.get('groups')
+        });
+      }
 
       return this;
     }
@@ -109,17 +123,30 @@ export default class ServerList {
       order: this.order(true)
     };
 
-    this._groups(parameters, (error, data) => {
-      if (error) {
-        callback(error);
+    this._validate(parameters, (validateError) => {
+      if (validateError) {
+        if (callback) {
+          callback(validateError);
+        }
+
         return;
       }
 
-      this._meta.set('groups', data);
+      this._groups(parameters, (groupsError, data) => {
+        if (groupsError) {
+          if (callback) {
+            callback(groupsError);
+          }
 
-      callback(null, {
-        count: this._count,
-        groups: this._meta.get('groups')
+          return;
+        }
+
+        this._meta.set('groups', data);
+
+        callback(null, {
+          count: this._count,
+          groups: this._meta.get('groups')
+        });
       });
     });
 
@@ -146,17 +173,27 @@ export default class ServerList {
       order: this.order(true)
     };
 
-    this._total(parameters, (error, data) => {
-      if (error) {
-        callback(error);
+    this._validate(parameters, (validateError) => {
+      if (validateError) {
+        if (callback) {
+          callback(validateError);
+        }
+
         return;
       }
 
-      this._meta.set('total', data.total);
+      this._total(parameters, (error, data) => {
+        if (error) {
+          callback(error);
+          return;
+        }
 
-      callback(null, {
-        count: this._count,
-        total: this._meta.get('total')
+        this._meta.set('total', data.total);
+
+        callback(null, {
+          count: this._count,
+          total: this._meta.get('total')
+        });
       });
     });
 
@@ -203,63 +240,6 @@ export default class ServerList {
 
   _unbindConnection(connection) {
     connection.removeListener('close', this._handleClose);
-  }
-
-  _parseFilter(filter) {
-    const terms = {};
-
-    let value = '';
-    let field = '';
-    let enclosed = false;
-
-    for (let i = 0; i < filter.length; i += 1) {
-      if (filter[i] === '"') {
-        enclosed = !enclosed;
-      } else if (filter[i] === ' ') {
-        if (enclosed === true) {
-          value += filter[i];
-        } else if (enclosed === false) {
-          if (value) {
-            terms[value] = terms[value] || [];
-
-            if (field) {
-              terms[value].push(field);
-            }
-          }
-
-          value = '';
-          field = '';
-        }
-      } else if (filter[i] === ':') {
-        field = value;
-        value = '';
-      } else {
-        value += filter[i];
-      }
-    }
-
-    if (value) {
-      terms[value] = terms[value] || [];
-
-      if (field) {
-        terms[value].push(field);
-      }
-    }
-
-    return terms;
-  }
-
-  _parseOrder(orders) {
-    orders = orders.length > 0 ? orders.split(';') : [];
-
-    return orders.map((order) => {
-      const [column, direction] = order.split(':');
-
-      return {
-        column,
-        direction
-      };
-    });
   }
 
   _changePages(action, diff, id, callback) {

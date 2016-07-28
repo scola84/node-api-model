@@ -6,10 +6,23 @@ export default class ServerListModel {
     this._groups = null;
     this._total = null;
     this._select = null;
+
+    this._authorize = (r, c) => c();
+    this._validate = (r, d, c) => c();
   }
 
   name(name) {
     this._name = name;
+    return this;
+  }
+
+  authorize(authorize) {
+    this._authorize = authorize;
+    return this;
+  }
+
+  validate(validate) {
+    this._validate = validate;
     return this;
   }
 
@@ -32,6 +45,7 @@ export default class ServerListModel {
     return new ServerList()
       .id(id)
       .name(this._name)
+      .validate(this._validate)
       .groups(this._groups)
       .total(this._total)
       .select(this._select)
