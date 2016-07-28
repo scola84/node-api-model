@@ -1,7 +1,9 @@
 import odiff from 'odiff';
+import GroupsQuery from './query-groups';
+import TotalQuery from './query-total';
 import ServerPage from './page';
-import parseFilter from '../helper/parse-filter';
-import parseOrder from '../helper/parse-order';
+import parseFilter from '../../helper/parse-filter';
+import parseOrder from '../../helper/parse-order';
 
 export default class ServerList {
   constructor() {
@@ -101,101 +103,28 @@ export default class ServerList {
     return this;
   }
 
-  groups(callback) {
-    if (!this._groups) {
-      this._groups = callback;
-      return this;
+  groups(groups) {
+    if (typeof groups === 'undefined') {
+      return this._groups;
     }
 
-    if (this._meta.has('groups')) {
-      if (callback) {
-        callback(null, {
-          count: this._count,
-          groups: this._meta.get('groups')
-        });
-      }
-
-      return this;
-    }
-
-    const parameters = {
-      filter: this.filter(true),
-      order: this.order(true)
-    };
-
-    this._validate(parameters, (validateError) => {
-      if (validateError) {
-        if (callback) {
-          callback(validateError);
-        }
-
-        return;
-      }
-
-      this._groups(parameters, (groupsError, data) => {
-        if (groupsError) {
-          if (callback) {
-            callback(groupsError);
-          }
-
-          return;
-        }
-
-        this._meta.set('groups', data);
-
-        callback(null, {
-          count: this._count,
-          groups: this._meta.get('groups')
-        });
-      });
-    });
+    this._groups = new GroupsQuery()
+      .list(this)
+      .query(groups)
+      .validate(this._validate);
 
     return this;
   }
 
-  total(callback) {
-    if (!this._total) {
-      this._total = callback;
-      return this;
+  total(total) {
+    if (typeof total === 'undefined') {
+      return this._total;
     }
 
-    if (this._meta.has('total')) {
-      callback(null, {
-        count: this._count,
-        total: this._meta.get('total')
-      });
-
-      return this;
-    }
-
-    const parameters = {
-      filter: this.filter(true),
-      order: this.order(true)
-    };
-
-    this._validate(parameters, (validateError) => {
-      if (validateError) {
-        if (callback) {
-          callback(validateError);
-        }
-
-        return;
-      }
-
-      this._total(parameters, (error, data) => {
-        if (error) {
-          callback(error);
-          return;
-        }
-
-        this._meta.set('total', data.total);
-
-        callback(null, {
-          count: this._count,
-          total: this._meta.get('total')
-        });
-      });
-    });
+    this._total = new TotalQuery()
+      .list(this)
+      .query(total)
+      .validate(this._validate);
 
     return this;
   }
@@ -211,6 +140,15 @@ export default class ServerList {
     return this;
   }
 
+  meta(name, data) {
+    if (typeof data === 'undefined') {
+      return this._meta.get(name);
+    }
+
+    this._meta.set(name, data);
+    return this;
+  }
+
   page(index) {
     index = Number(index);
 
@@ -218,6 +156,7 @@ export default class ServerList {
       this._pages.set(index, new ServerPage()
         .list(this)
         .index(index)
+        .validate(this._validate)
         .select(this._select));
     }
 
@@ -231,6 +170,21 @@ export default class ServerList {
       } else if (this._meta.has('total')) {
         this._changeTotal(action, pageDiffs, id, callback);
       }
+    });
+  }
+
+  notifyClients(action, diff) {
+    this._connections.forEach((connection) => {
+      connection.request({
+        method: 'PUB',
+        path: '/' + this._name,
+        query: {
+          id: this._id
+        }
+      }).end({
+        action,
+        diff
+      });
     });
   }
 
@@ -276,7 +230,7 @@ export default class ServerList {
           groups: odiff(groups, data.groups)
         };
 
-        this._notifyClients(action, diff);
+        this.notifyClients(action, diff);
       }
 
       if (callback) {
@@ -298,27 +252,12 @@ export default class ServerList {
           total: data.total
         };
 
-        this._notifyClients(action, diff);
+        this.notifyClients(action, diff);
       }
 
       if (callback) {
         callback(error, diff);
       }
-    });
-  }
-
-  _notifyClients(action, diff) {
-    this._connections.forEach((connection) => {
-      connection.request({
-        method: 'PUB',
-        path: '/' + this._name,
-        query: {
-          id: this._id
-        }
-      }).end({
-        action,
-        diff
-      });
     });
   }
 }

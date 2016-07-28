@@ -1,6 +1,6 @@
 import sha1 from 'sha1';
-import ClientListModel from './list-model';
-import ClientObjectModel from './object-model';
+import ClientListModel from './list/model';
+import ClientObjectModel from './object/model';
 
 export default class ClientModel {
   constructor() {

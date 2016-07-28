@@ -1,8 +1,8 @@
 import EventEmitter from 'events';
 import ClientPage from './page';
-import applyDiff from '../helper/apply-diff';
-import parseFilter from '../helper/parse-filter';
-import parseOrder from '../helper/parse-order';
+import applyDiff from '../../helper/apply-diff';
+import parseFilter from '../../helper/parse-filter';
+import parseOrder from '../../helper/parse-order';
 
 export default class ClientList extends EventEmitter {
   constructor() {
@@ -218,15 +218,13 @@ export default class ClientList extends EventEmitter {
       return;
     }
 
-    const parameters = {
-      filter: this.filter(true),
-      order: this.order(true)
-    };
+    const filter = this.filter(true);
+    const order = this.order(true);
 
-    this._validate(parameters, (error) => {
-      if (error) {
+    this._validate(filter, order, (filterError, orderError) => {
+      if (filterError || orderError) {
         if (callback) {
-          callback(error);
+          callback(filterError || orderError);
         }
 
         return;
@@ -272,15 +270,13 @@ export default class ClientList extends EventEmitter {
       return;
     }
 
-    const parameters = {
-      filter: this.filter(true),
-      order: this.order(true)
-    };
+    const filter = this.filter(true);
+    const order = this.order(true);
 
-    this._validate(parameters, (error) => {
-      if (error) {
+    this._validate(filter, order, (filterError, orderError) => {
+      if (filterError || orderError) {
         if (callback) {
-          callback(error);
+          callback(filterError || orderError);
         }
 
         return;

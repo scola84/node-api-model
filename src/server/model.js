@@ -1,6 +1,6 @@
 import sha1 from 'sha1';
-import ServerListModel from './list-model';
-import ServerObjectModel from './object-model';
+import ServerListModel from './list/model';
+import ServerObjectModel from './object/model';
 
 export default class ServerModel {
   constructor() {

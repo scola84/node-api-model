@@ -1,6 +1,6 @@
 import EventEmitter from 'events';
 import odiff from 'odiff';
-import applyDiff from '../helper/apply-diff';
+import applyDiff from '../../helper/apply-diff';
 
 export default class ClientObject extends EventEmitter {
   constructor() {

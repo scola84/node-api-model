@@ -1,4 +1,4 @@
-import applyDiff from '../helper/apply-diff';
+import applyDiff from '../../helper/apply-diff';
 
 export default class ClientPage {
   constructor() {
