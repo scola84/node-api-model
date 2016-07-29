@@ -1,5 +1,8 @@
 import EventEmitter from 'events';
-import odiff from 'odiff';
+import SelectRequest from './request/select';
+import InsertRequest from './request/insert';
+import UpdateRequest from './request/update';
+import DeleteRequest from './request/delete';
 import applyDiff from '../../helper/apply-diff';
 
 export default class ClientObject extends EventEmitter {
@@ -11,6 +14,11 @@ export default class ClientObject extends EventEmitter {
     this._model = null;
     this._connection = null;
     this._validate = null;
+
+    this._select = null;
+    this._insert = null;
+    this._update = null;
+    this._delete = null;
 
     this._subscribed = null;
     this._data = null;
@@ -77,6 +85,19 @@ export default class ClientObject extends EventEmitter {
     return this;
   }
 
+  data(data) {
+    if (typeof data === 'undefined') {
+      return this._data;
+    }
+
+    this._data = data;
+    return this;
+  }
+
+  get(name) {
+    return this._data && this._data[name];
+  }
+
   subscribe(subscribed) {
     this._subscribed = subscribed;
 
@@ -88,88 +109,42 @@ export default class ClientObject extends EventEmitter {
     return this;
   }
 
-  select(callback) {
-    if (this._data) {
-      if (callback) {
-        return callback(null, this._data);
-      }
-
-      return this._data;
+  select() {
+    if (!this._select) {
+      this._select = new SelectRequest()
+        .object(this);
     }
 
-    const request = {
-      path: '/' + this._name + '/' + this._id
-    };
-
-    this._connection
-      .request(request, (response) => this._select(response, callback))
-      .end();
-
-    return this;
+    return this._select;
   }
 
-  insert(data, callback) {
-    this._validate(data, (error) => {
-      if (error) {
-        if (callback) {
-          callback(error);
-        }
-
-        return;
-      }
-
-      const request = {
-        method: 'POST',
-        path: '/' + this._name
-      };
-
-      this._connection
-        .request(request, (response) => this._insert(response, callback))
-        .end(data);
-    }, 'insert');
-  }
-
-  update(data, callback) {
-    const changed = Object.assign({}, this._data, data);
-    const diff = odiff(this._data, changed);
-
-    if (diff.length === 0) {
-      if (callback) {
-        callback();
-      }
-
-      return;
+  insert() {
+    if (!this._insert) {
+      this._insert = new InsertRequest()
+        .object(this)
+        .validate(this._validate);
     }
 
-    this._validate(changed, (error) => {
-      if (error) {
-        if (callback) {
-          callback(error);
-        }
-
-        return;
-      }
-
-      const request = {
-        method: 'PUT',
-        path: '/' + this._name + '/' + this._id
-      };
-
-      this._connection
-        .request(request, (response) => this._update(response, callback))
-        .end(changed);
-    }, 'update');
+    return this._insert;
   }
 
-  delete(callback) {
-    const request = {
-      method: 'DELETE',
-      path: '/' + this._name + '/' + this._id
-    };
+  update() {
+    if (!this._update) {
+      this._update = new UpdateRequest()
+        .object(this)
+        .validate(this._validate);
+    }
 
-    this._connection
-      .request(request, (response) => this._delete(response, callback))
-      .end();
+    return this._update;
+  }
+
+  delete() {
+    if (!this._delete) {
+      this._delete = new DeleteRequest()
+        .object(this);
+    }
+
+    return this._delete;
   }
 
   change(action, diff) {
@@ -200,69 +175,7 @@ export default class ClientObject extends EventEmitter {
 
     if (this._data) {
       this._data = null;
-      this.select();
+      this.select().execute();
     }
-  }
-
-  _select(response, callback) {
-    response.once('data', (data) => {
-      const error = response.statusCode === 200 ?
-        null : new Error(data);
-
-      if (response.statusCode === 200) {
-        this._data = data;
-      }
-
-      if (callback) {
-        callback(error, this._data, this);
-      }
-    });
-  }
-
-  _insert(response, callback) {
-    response.once('data', (data) => {
-      const error = response.statusCode === 201 ?
-        null : new Error(data);
-
-      if (response.statusCode === 201) {
-        this._id = response.headers.id;
-        this._data = data;
-
-        this._model.object({
-          id: this._id,
-          object: this
-        }, 'insert');
-      }
-
-      if (callback) {
-        callback(error, this._data, this);
-      }
-    });
-  }
-
-  _update(response, callback) {
-    response.once('data', (data) => {
-      const error = response.statusCode === 200 ?
-        null : new Error(data);
-
-      if (response.statusCode === 200) {
-        this._data = data;
-      }
-
-      if (callback) {
-        callback(error, this._data, this);
-      }
-    });
-  }
-
-  _delete(response, callback) {
-    response.once('data', (data) => {
-      const error = response.statusCode === 200 ?
-        null : new Error(data);
-
-      if (callback) {
-        callback(error, this._data, this);
-      }
-    });
   }
 }

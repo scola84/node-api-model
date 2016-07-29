@@ -154,8 +154,8 @@ export default class ServerList {
 
     if (!this._pages.has(index)) {
       this._pages.set(index, new ServerPage()
-        .list(this)
         .index(index)
+        .list(this)
         .validate(this._validate)
         .select(this._select));
     }

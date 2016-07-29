@@ -1,5 +1,7 @@
 import EventEmitter from 'events';
 import ClientPage from './page';
+import GroupsRequest from './request/groups';
+import TotalRequest from './request/total';
 import applyDiff from '../../helper/apply-diff';
 import parseFilter from '../../helper/parse-filter';
 import parseOrder from '../../helper/parse-order';
@@ -13,6 +15,11 @@ export default class ClientList extends EventEmitter {
     this._model = null;
     this._connection = null;
     this._validate = null;
+
+    this._groups = null;
+    this._total = null;
+    this._select = null;
+
     this._subscribed = null;
 
     this._filter = '';
@@ -130,39 +137,44 @@ export default class ClientList extends EventEmitter {
     return this;
   }
 
-  groups(groups) {
-    if (typeof groups === 'undefined') {
-      return this._meta.get('groups');
+  groups() {
+    if (!this._groups) {
+      this._groups = new GroupsRequest()
+        .list(this)
+        .validate(this._validate);
     }
 
-    if (typeof groups === 'function') {
-      return this._groups(groups);
-    }
-
-    let total = 0;
-
-    groups.forEach((group) => {
-      group.begin = total;
-      group.end = total + group.total;
-      total = group.end;
-    });
-
-    this._meta.set('groups', groups);
-    this.total(total);
-
-    return this;
+    return this._groups;
   }
 
-  total(total) {
-    if (typeof total === 'undefined') {
-      return this._meta.get('total');
+  total() {
+    if (!this._total) {
+      this._total = new TotalRequest()
+        .list(this)
+        .validate(this._validate);
     }
 
-    if (typeof total === 'function') {
-      return this._total(total);
+    return this._total;
+  }
+
+  meta(name, data) {
+    if (typeof data === 'undefined') {
+      return this._meta.get(name);
     }
 
-    this._meta.set('total', total);
+    if (name === 'groups') {
+      let total = 0;
+
+      data.forEach((group) => {
+        group.begin = total;
+        group.end = total + group.total;
+        total = group.end;
+      });
+
+      this._meta.set('total', total);
+    }
+
+    this._meta.set(name, data);
     return this;
   }
 
@@ -171,8 +183,9 @@ export default class ClientList extends EventEmitter {
 
     if (!this._pages.has(index)) {
       this._pages.set(index, new ClientPage()
+        .index(index)
         .list(this)
-        .index(index));
+        .validate(this._validate));
     }
 
     return this._pages.get(index);
@@ -209,110 +222,6 @@ export default class ClientList extends EventEmitter {
     this._connection.removeListener('open', this._handleOpen);
   }
 
-  _groups(callback) {
-    if (this._meta.has('groups')) {
-      if (callback) {
-        callback(null, this._meta.get('groups'), this);
-      }
-
-      return;
-    }
-
-    const filter = this.filter(true);
-    const order = this.order(true);
-
-    this._validate(filter, order, (filterError, orderError) => {
-      if (filterError || orderError) {
-        if (callback) {
-          callback(filterError || orderError);
-        }
-
-        return;
-      }
-
-      const request = {
-        path: '/' + this._name,
-        query: {
-          filter: this._filter,
-          order: this._order,
-          meta: 'groups'
-        }
-      };
-
-      this._connection
-        .request(request, (response) => this.__groups(response, callback))
-        .end();
-    });
-  }
-
-  __groups(response, callback) {
-    response.once('data', (data) => {
-      const error = response.statusCode === 200 ?
-        null : new Error(data);
-
-      if (response.statusCode === 200) {
-        this._count = data.count;
-        this.groups(data.groups);
-      }
-
-      if (callback) {
-        callback(error, data.groups, this);
-      }
-    });
-  }
-
-  _total(callback) {
-    if (this._meta.has('total')) {
-      if (callback) {
-        callback(this._meta.get('total'));
-      }
-
-      return;
-    }
-
-    const filter = this.filter(true);
-    const order = this.order(true);
-
-    this._validate(filter, order, (filterError, orderError) => {
-      if (filterError || orderError) {
-        if (callback) {
-          callback(filterError || orderError);
-        }
-
-        return;
-      }
-
-      const request = {
-        path: '/' + this._name,
-        query: {
-          filter: this._filter,
-          order: this._order,
-          meta: 'total'
-        }
-      };
-
-      this._connection
-        .request(request, (response) => this.__total(response, callback))
-        .end();
-    });
-  }
-
-  __total(response, callback) {
-    response.once('data', (data) => {
-      const error = response.statusCode === 200 ?
-        null : new Error(data);
-
-      if (response.statusCode === 200) {
-        this._count = data.count;
-        this.total(data.total);
-      }
-
-      if (callback) {
-        callback(error, data.total);
-      }
-    });
-  }
-
   _open() {
     if (this._subscribed) {
       this.subscribe(true);
@@ -321,12 +230,12 @@ export default class ClientList extends EventEmitter {
     if (this._meta.has('groups')) {
       this._meta.delete('groups');
       this._meta.delete('total');
-      this._groups();
+      this.groups().execute();
     }
 
     if (this._meta.has('total')) {
       this._meta.delete('total');
-      this._total();
+      this.total().execute();
     }
   }
 }

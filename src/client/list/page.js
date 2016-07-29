@@ -1,9 +1,14 @@
 import applyDiff from '../../helper/apply-diff';
+import SelectRequest from './request/select';
 
 export default class ClientPage {
   constructor() {
-    this._list = null;
     this._index = null;
+    this._list = null;
+
+    this._validate = null;
+    this._select = null;
+
     this._data = null;
 
     this._handleOpen = () => this._open();
@@ -11,6 +16,15 @@ export default class ClientPage {
 
   destroy() {
     this._unbindConnection();
+  }
+
+  index(index) {
+    if (typeof index === 'undefined') {
+      return this._index;
+    }
+
+    this._index = index;
+    return this;
   }
 
   list(list) {
@@ -24,12 +38,21 @@ export default class ClientPage {
     return this;
   }
 
-  index(index) {
-    if (typeof index === 'undefined') {
-      return this._index;
+  validate(validate) {
+    if (typeof validate === 'undefined') {
+      return this._validate;
     }
 
-    this._index = index;
+    this._validate = validate;
+    return this;
+  }
+
+  data(data) {
+    if (typeof data === 'undefined') {
+      return this._data;
+    }
+
+    this._data = data;
     return this;
   }
 
@@ -37,27 +60,15 @@ export default class ClientPage {
     return this._data && this._data[index];
   }
 
-  select(callback) {
-    if (this._data) {
-      if (callback) {
-        callback(null, this._data);
-      }
-
-      return;
+  select() {
+    if (!this._select) {
+      this._select = new SelectRequest()
+        .list(this._list)
+        .page(this)
+        .validate(this._validate);
     }
 
-    const request = {
-      path: '/' + this._list.name(),
-      query: {
-        filter: this._list.filter(),
-        order: this._list.order(),
-        page: this._index
-      }
-    };
-
-    this._list.connection()
-      .request(request, (response) => this._select(response, callback))
-      .end();
+    return this._select;
   }
 
   change(action, diff) {
@@ -75,22 +86,7 @@ export default class ClientPage {
   _open() {
     if (this._data) {
       this._data = null;
-      this.select();
+      this.select().execute();
     }
-  }
-
-  _select(response, callback) {
-    response.once('data', (data) => {
-      const error = response.statusCode === 200 ?
-        null : new Error(data);
-
-      if (response.statusCode === 200) {
-        this._data = data;
-      }
-
-      if (callback) {
-        callback(error, data);
-      }
-    });
   }
 }
