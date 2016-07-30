@@ -241,7 +241,7 @@ export default class ServerList {
         return;
       }
 
-      diff.groups = odiff(groups, data.groups);
+      diff.groups = odiff(groups, data);
 
       this.notifyClients(action, diff);
       callback(error, diff);
@@ -257,7 +257,7 @@ export default class ServerList {
         return;
       }
 
-      diff.total = data.total;
+      diff.total = data;
 
       this.notifyClients(action, diff);
       callback(error, diff);
