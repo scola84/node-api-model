@@ -1,15 +1,9 @@
-import Query from './query';
+import Query from '../query';
 
 export default class TotalQuery extends Query {
-  execute(callback) {
+  execute(callback = () => {}) {
     if (this._list.meta('total')) {
-      if (callback) {
-        callback(null, {
-          count: this._list.count(),
-          total: this._list.meta('total')
-        });
-      }
-
+      callback(null, this._list.meta('total'), this._list);
       return;
     }
 
@@ -23,10 +17,8 @@ export default class TotalQuery extends Query {
 
   _handleValidate(filterError, orderError, filter, order, callback) {
     if (filterError || orderError) {
-      if (callback) {
-        callback(filterError || orderError);
-      }
-
+      callback(new Error('400 input_invalid ' +
+        (filterError || orderError).message));
       return;
     }
 
@@ -37,20 +29,11 @@ export default class TotalQuery extends Query {
 
   _handleQuery(error, data, callback) {
     if (error) {
-      if (callback) {
-        callback(error);
-      }
-
+      callback(new Error('500 query_failed ' + error.message));
       return;
     }
 
     this._list.meta('total', data.total);
-
-    if (callback) {
-      callback(null, {
-        count: this._list.count(),
-        total: data.total
-      });
-    }
+    callback(null, data.total, this._list);
   }
 }

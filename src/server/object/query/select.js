@@ -1,12 +1,9 @@
-import Query from './query';
+import Query from '../query';
 
 export default class SelectQuery extends Query {
-  execute(request, callback) {
+  execute(request, callback = () => {}) {
     if (this._object.data()) {
-      if (callback) {
-        callback(null, this._object.data());
-      }
-
+      callback(null, this._object.data(), this._object);
       return;
     }
 
@@ -17,25 +14,16 @@ export default class SelectQuery extends Query {
 
   _handleQuery(error, data, callback) {
     if (error) {
-      if (callback) {
-        callback(error);
-      }
-
+      callback(new Error('500 query_failed ' + error.message));
       return;
     }
 
     if (!data) {
-      if (callback) {
-        callback(new Error('404 not_found'));
-      }
-
+      callback(new Error('404 not_found'));
       return;
     }
 
     this._object.data(data);
-
-    if (callback) {
-      callback(null, data, this._object);
-    }
+    callback(null, data, this._object);
   }
 }

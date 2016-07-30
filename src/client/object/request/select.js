@@ -1,9 +1,10 @@
+import ModelError from '../../error';
 import Request from '../request';
 
 export default class SelectRequest extends Request {
   execute(callback = () => {}) {
     if (this._object.data()) {
-      callback(null, this._object.data(), this);
+      callback(null, this._object.data(), this._object);
       return;
     }
 
@@ -36,7 +37,7 @@ export default class SelectRequest extends Request {
     response.removeAllListeners();
 
     const error = response.statusCode === 200 ?
-      null : new Error(data);
+      null : new ModelError(data, response.statusCode);
 
     if (response.statusCode === 200) {
       this._object.data(data);

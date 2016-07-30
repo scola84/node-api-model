@@ -1,9 +1,10 @@
+import ModelError from '../../error';
 import Request from '../request';
 
 export default class GroupsRequest extends Request {
   execute(callback = () => {}) {
     if (this._list.meta('groups')) {
-      callback(null, this._list.meta('groups'));
+      callback(null, this._list.meta('groups'), this._list);
       return;
     }
 
@@ -17,10 +18,7 @@ export default class GroupsRequest extends Request {
 
   _handleValidate(filterError, orderError, filter, order, callback) {
     if (filterError || orderError) {
-      if (callback) {
-        callback(filterError || orderError);
-      }
-
+      callback(filterError || orderError);
       return;
     }
 
@@ -58,14 +56,13 @@ export default class GroupsRequest extends Request {
     response.removeAllListeners();
 
     const error = response.statusCode === 200 ?
-      null : new Error(data);
+      null : new ModelError(data, response.statusCode);
 
     if (response.statusCode === 200) {
-      this._list.count(data.count);
-      this._list.meta('groups', data.groups);
+      this._list.meta('groups', data);
     }
 
-    callback(error, data.groups, this._list);
+    callback(error, data, this._list);
   }
 
   _handleError(error, response, callback) {

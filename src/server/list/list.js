@@ -1,7 +1,7 @@
 import odiff from 'odiff';
-import GroupsQuery from './query-groups';
-import TotalQuery from './query-total';
 import ServerPage from './page';
+import GroupsQuery from './query/groups';
+import TotalQuery from './query/total';
 import parseFilter from '../../helper/parse-filter';
 import parseOrder from '../../helper/parse-order';
 
@@ -163,12 +163,22 @@ export default class ServerList {
     return this._pages.get(index);
   }
 
-  change(action, diff, id, callback) {
-    this._changePages(action, diff, id, (pageDiffs) => {
+  change(action, diff, id, callback = () => {}) {
+    this._changePages(action, diff, id, (error, pageDiffs) => {
+      if (error) {
+        callback(error);
+        return;
+      }
+
+      diff = {
+        id,
+        pages: pageDiffs
+      };
+
       if (this._meta.has('groups')) {
-        this._changeGroups(action, pageDiffs, id, callback);
+        this._changeGroups(action, diff, callback);
       } else if (this._meta.has('total')) {
-        this._changeTotal(action, pageDiffs, id, callback);
+        this._changeTotal(action, diff, callback);
       }
     });
   }
@@ -201,63 +211,56 @@ export default class ServerList {
     let count = 0;
 
     this._pages.forEach((page, index) => {
-      page.change(action, diff, id, (pageDiff) => {
+      page.change(action, diff, id, (error, pageDiff) => {
+        if (error) {
+          callback(error);
+          return;
+        }
+
         index = Number(index);
         count += 1;
 
-        if (pageDiff) {
+        if (pageDiff.length > 0) {
           pageDiffs[index] = pageDiff;
         }
 
         if (count === this._pages.size) {
-          callback(pageDiffs);
+          callback(null, pageDiffs);
         }
       });
     });
   }
 
-  _changeGroups(action, pageDiffs, id, callback) {
+  _changeGroups(action, diff, callback) {
     const groups = this._meta.get('groups');
     this._meta.delete('groups');
 
     this.groups().execute((error, data) => {
-      let diff = null;
-
-      if (!error) {
-        diff = {
-          id,
-          pages: pageDiffs,
-          groups: odiff(groups, data.groups)
-        };
-
-        this.notifyClients(action, diff);
+      if (error) {
+        callback(error);
+        return;
       }
 
-      if (callback) {
-        callback(error, diff);
-      }
+      diff.groups = odiff(groups, data.groups);
+
+      this.notifyClients(action, diff);
+      callback(error, diff);
     });
   }
 
-  _changeTotal(action, pageDiffs, id, callback) {
+  _changeTotal(action, diff, callback) {
     this._meta.delete('total');
 
     this.total().execute((error, data) => {
-      let diff = null;
-
-      if (!error) {
-        diff = {
-          id,
-          pages: pageDiffs,
-          total: data.total
-        };
-
-        this.notifyClients(action, diff);
+      if (error) {
+        callback(error);
+        return;
       }
 
-      if (callback) {
-        callback(error, diff);
-      }
+      diff.total = data.total;
+
+      this.notifyClients(action, diff);
+      callback(error, diff);
     });
   }
 }

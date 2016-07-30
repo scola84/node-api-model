@@ -1,9 +1,10 @@
+import ModelError from '../../error';
 import Request from '../request';
 
 export default class TotalRequest extends Request {
   execute(callback = () => {}) {
     if (this._list.meta('total')) {
-      callback(null, this._list.meta('total'));
+      callback(null, this._list.meta('total'), this._list);
       return;
     }
 
@@ -17,10 +18,7 @@ export default class TotalRequest extends Request {
 
   _handleValidate(filterError, orderError, filter, order, callback) {
     if (filterError || orderError) {
-      if (callback) {
-        callback(filterError || orderError);
-      }
-
+      callback(filterError || orderError);
       return;
     }
 
@@ -58,14 +56,13 @@ export default class TotalRequest extends Request {
     response.removeAllListeners();
 
     const error = response.statusCode === 200 ?
-      null : new Error(data);
+      null : new ModelError(data, response.statusCode);
 
     if (response.statusCode === 200) {
-      this._list.count(data.count);
-      this._list.meta('total', data.total);
+      this._list.meta('total', data);
     }
 
-    callback(error, data.total, this._list);
+    callback(error, data, this._list);
   }
 
   _handleError(error, response, callback) {

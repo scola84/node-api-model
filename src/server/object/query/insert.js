@@ -1,7 +1,7 @@
-import Query from './query';
+import Query from '../query';
 
 export default class UpdateQuery extends Query {
-  execute(request, callback) {
+  execute(request, callback = () => {}) {
     request.once('data', (data) => {
       this._handleData(data, request, callback);
     });
@@ -13,10 +13,7 @@ export default class UpdateQuery extends Query {
 
   _handleError(error, request, callback) {
     request.removeAllListeners();
-
-    if (callback) {
-      callback(error);
-    }
+    callback(new Error('500 request_failed ' + error.message));
   }
 
   _handleData(data, request, callback) {
@@ -29,10 +26,7 @@ export default class UpdateQuery extends Query {
 
   _handleValidate(error, data, request, callback) {
     if (error) {
-      if (callback) {
-        callback(error);
-      }
-
+      callback(new Error('400 input_invalid ' + error.message));
       return;
     }
 
@@ -43,10 +37,7 @@ export default class UpdateQuery extends Query {
 
   _handleQuery(error, id, data, callback) {
     if (error) {
-      if (callback) {
-        callback(error);
-      }
-
+      callback(new Error('500 query_failed ' + error.message));
       return;
     }
 
@@ -60,8 +51,6 @@ export default class UpdateQuery extends Query {
       .data(data)
       .notifyPeers('insert');
 
-    if (callback) {
-      callback(null, data, this._object);
-    }
+    callback(null, data, this._object);
   }
 }

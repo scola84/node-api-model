@@ -1,5 +1,5 @@
 import odiff from 'odiff';
-import SelectQuery from './query-select';
+import SelectQuery from './query/select';
 
 export default class ServerPage {
   constructor() {
@@ -67,7 +67,7 @@ export default class ServerPage {
     this._data = null;
 
     this.select().execute((error, data) => {
-      callback(odiff(copy, data));
+      callback(error, error ? null : odiff(copy, data));
     });
   }
 }

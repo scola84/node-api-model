@@ -1,4 +1,4 @@
-import Query from './query';
+import Query from '../query';
 
 export default class SelectQuery extends Query {
   constructor() {
@@ -15,12 +15,9 @@ export default class SelectQuery extends Query {
     return this;
   }
 
-  execute(callback) {
+  execute(callback = () => {}) {
     if (this._page.data()) {
-      if (callback) {
-        callback(null, this._page.data());
-      }
-
+      callback(null, this._page.data(), this._page);
       return;
     }
 
@@ -34,10 +31,8 @@ export default class SelectQuery extends Query {
 
   _handleValidate(filterError, orderError, filter, order, callback) {
     if (filterError || orderError) {
-      if (callback) {
-        callback(filterError || orderError);
-      }
-
+      callback(new Error('400 input_invalid ' +
+        (filterError || orderError).message));
       return;
     }
 
@@ -53,17 +48,11 @@ export default class SelectQuery extends Query {
 
   _handleQuery(error, data, callback) {
     if (error) {
-      if (callback) {
-        callback(error);
-      }
-
+      callback(new Error('500 query_failed ' + error.message));
       return;
     }
 
     this._page.data(data);
-
-    if (callback) {
-      callback(null, data);
-    }
+    callback(null, data, this._page);
   }
 }

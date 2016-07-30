@@ -193,9 +193,9 @@ export default class ClientList extends EventEmitter {
 
   change(action, diff) {
     if (diff.groups) {
-      this.groups(applyDiff(this._meta.get('groups'), diff.groups));
+      this.meta('groups', applyDiff(this.meta('groups'), diff.groups));
     } else if (diff.total) {
-      this.total(diff.total);
+      this.meta('total', diff.total);
     }
 
     const indices = Object.keys(diff.pages);
@@ -210,7 +210,7 @@ export default class ClientList extends EventEmitter {
       }
     });
 
-    this.emit('change', action, indices, diff.id);
+    this.emit('change', action, diff, indices);
     return this;
   }
 

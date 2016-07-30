@@ -1,8 +1,8 @@
 import odiff from 'odiff';
-import Query from './query';
+import Query from '../query';
 
 export default class UpdateQuery extends Query {
-  execute(request, callback) {
+  execute(request, callback = () => {}) {
     request.once('data', (data) => {
       this._handleData(data, request, callback);
     });
@@ -14,10 +14,7 @@ export default class UpdateQuery extends Query {
 
   _handleError(error, request, callback) {
     request.removeAllListeners();
-
-    if (callback) {
-      callback(error);
-    }
+    callback(new Error('500 request_failed ' + error.message));
   }
 
   _handleData(data, request, callback) {
@@ -27,10 +24,7 @@ export default class UpdateQuery extends Query {
     const diff = odiff(this._object.data(), changed);
 
     if (diff.length === 0) {
-      if (callback) {
-        callback();
-      }
-
+      callback();
       return;
     }
 
@@ -41,10 +35,7 @@ export default class UpdateQuery extends Query {
 
   _handleValidate(error, changed, diff, request, callback) {
     if (error) {
-      if (callback) {
-        callback(error);
-      }
-
+      callback(new Error('400 input_invalid ' + error.message));
       return;
     }
 
@@ -55,10 +46,7 @@ export default class UpdateQuery extends Query {
 
   _handleQuery(error, changed, diff, callback) {
     if (error) {
-      if (callback) {
-        callback(error);
-      }
-
+      callback(new Error('500 query_failed ' + error.message));
       return;
     }
 
@@ -66,8 +54,6 @@ export default class UpdateQuery extends Query {
       .data(changed)
       .notifyPeers('update', diff);
 
-    if (callback) {
-      callback(null, changed, this._object);
-    }
+    callback(null, changed, this._object);
   }
 }

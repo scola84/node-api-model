@@ -1,7 +1,7 @@
-import SelectQuery from './query-select';
-import InsertQuery from './query-insert';
-import UpdateQuery from './query-update';
-import DeleteQuery from './query-delete';
+import SelectQuery from './query/select';
+import InsertQuery from './query/insert';
+import UpdateQuery from './query/update';
+import DeleteQuery from './query/delete';
 import applyDiff from '../../helper/apply-diff';
 
 export default class ServerObject {

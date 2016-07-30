@@ -1,3 +1,4 @@
+import ModelError from '../../error';
 import Request from '../request';
 
 export default class UpdateRequest extends Request {
@@ -43,7 +44,7 @@ export default class UpdateRequest extends Request {
     response.removeAllListeners();
 
     const error = response.statusCode === 201 ?
-      null : new Error(data);
+      null : new ModelError(data, response.statusCode);
 
     if (response.statusCode === 201) {
       const id = response.headers.id;

@@ -1,3 +1,4 @@
+import ModelError from '../../error';
 import Request from '../request';
 
 export default class TotalRequest extends Request {
@@ -17,7 +18,7 @@ export default class TotalRequest extends Request {
 
   execute(callback = () => {}) {
     if (this._page.data()) {
-      callback(null, this._page.data());
+      callback(null, this._page.data(), this._page);
       return;
     }
 
@@ -31,10 +32,7 @@ export default class TotalRequest extends Request {
 
   _handleValidate(filterError, orderError, callback) {
     if (filterError || orderError) {
-      if (callback) {
-        callback(filterError || orderError);
-      }
-
+      callback(filterError || orderError);
       return;
     }
 
@@ -72,13 +70,13 @@ export default class TotalRequest extends Request {
     response.removeAllListeners();
 
     const error = response.statusCode === 200 ?
-      null : new Error(data);
+      null : new ModelError(data, response.statusCode);
 
     if (response.statusCode === 200) {
       this._page.data(data);
     }
 
-    callback(error, data);
+    callback(error, data, this._page);
   }
 
   _handleError(error, response, callback) {

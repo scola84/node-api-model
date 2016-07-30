@@ -148,8 +148,6 @@ export default class ClientObject extends EventEmitter {
   }
 
   change(action, diff) {
-    this.emit('change', action, diff);
-
     if (action === 'update') {
       this._data = applyDiff(Object.assign({}, this._data), diff);
     }
@@ -158,6 +156,8 @@ export default class ClientObject extends EventEmitter {
       this._subscribed = false;
       this.destroy();
     }
+
+    this.emit('change', action, diff, this._data);
   }
 
   _bindConnection() {

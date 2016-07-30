@@ -4,5 +4,6 @@ export default function parseOrder(orders) {
   return orders.reduce((fields, order) => {
     const [field, direction] = order.split(':');
     fields[field] = direction;
+    return fields;
   }, {});
 }

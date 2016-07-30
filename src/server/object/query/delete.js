@@ -1,7 +1,7 @@
-import Query from './query';
+import Query from '../query';
 
 export default class DeleteQuery extends Query {
-  execute(request, callback) {
+  execute(request, callback = () => {}) {
     this._query(request, (error) => {
       this._handleQuery(error, callback);
     });
@@ -9,17 +9,11 @@ export default class DeleteQuery extends Query {
 
   _handleQuery(error, callback) {
     if (error) {
-      if (callback) {
-        callback(error);
-      }
-
+      callback(new Error('500 query_failed ' + error.message));
       return;
     }
 
     this._object.notifyPeers('delete');
-
-    if (callback) {
-      callback(null, this._object);
-    }
+    callback(null, null, this._object);
   }
 }

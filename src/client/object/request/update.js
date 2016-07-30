@@ -1,4 +1,5 @@
 import odiff from 'odiff';
+import ModelError from '../../error';
 import Request from '../request';
 
 export default class UpdateRequest extends Request {
@@ -52,7 +53,7 @@ export default class UpdateRequest extends Request {
     response.removeAllListeners();
 
     const error = response.statusCode === 200 ?
-      null : new Error(data);
+      null : new ModelError(data, response.statusCode);
 
     if (response.statusCode === 200) {
       this._object.data(data);
