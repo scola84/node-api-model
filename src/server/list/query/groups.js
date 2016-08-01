@@ -2,16 +2,23 @@ import Query from '../query';
 
 export default class GroupsQuery extends Query {
   execute(callback = () => {}) {
-    if (this._list.meta('groups')) {
-      callback(null, this._list.meta('groups'), this._list);
-      return;
-    }
+    this._list.meta('groups', (error, data) => {
+      if (error) {
+        callback(error);
+        return;
+      }
 
-    const filter = this._list.filter(true);
-    const order = this._list.order(true);
+      if (data) {
+        callback(null, data, this._list);
+        return;
+      }
 
-    this._validate(filter, order, (filterError, orderError) => {
-      this._handleValidate(filterError, orderError, filter, order, callback);
+      const filter = this._list.filter(true);
+      const order = this._list.order(true);
+
+      this._validate(filter, order, (filterError, orderError) => {
+        this._handleValidate(filterError, orderError, filter, order, callback);
+      });
     });
   }
 
@@ -33,7 +40,8 @@ export default class GroupsQuery extends Query {
       return;
     }
 
-    this._list.meta('groups', data);
-    callback(null, data, this._list);
+    this._list.meta('groups', data, (listError) => {
+      callback(listError, data, this._list);
+    });
   }
 }

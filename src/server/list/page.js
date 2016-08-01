@@ -6,10 +6,21 @@ export default class ServerPage {
     this._index = null;
     this._list = null;
 
+    this._cache = null;
+    this._lifetime = null;
+    this._interval = null;
+
     this._validate = null;
     this._select = null;
+  }
 
-    this._data = null;
+  destroy(cache) {
+    clearInterval(this._interval);
+    this._list.page(this._index, false);
+
+    if (cache === true) {
+      this._cache.del(this.key());
+    }
   }
 
   index(index) {
@@ -30,6 +41,17 @@ export default class ServerPage {
     return this;
   }
 
+  cache(cache, lifetime) {
+    if (typeof cache === 'undefined') {
+      return this._cache;
+    }
+
+    this._cache = cache;
+    this._lifetime = lifetime;
+
+    return this;
+  }
+
   validate(validate) {
     if (typeof validate === 'undefined') {
       return this._validate;
@@ -39,13 +61,27 @@ export default class ServerPage {
     return this;
   }
 
-  data(data) {
-    if (typeof data === 'undefined') {
-      return this._data;
+  key() {
+    return this._list.key() + '/' + this._index;
+  }
+
+  data(data, callback = () => {}) {
+    if (typeof data === 'function') {
+      this._cache.get(this.key(), data);
+      return;
     }
 
-    this._data = data;
-    return this;
+    this._cache.set(this.key(), data, this._lifetime, (error) => {
+      if (error) {
+        callback(error);
+        return;
+      }
+
+      this._interval = setInterval(this._keepalive.bind(this),
+        this._lifetime * 0.9);
+
+      callback();
+    });
   }
 
   select(select) {
@@ -63,11 +99,27 @@ export default class ServerPage {
   }
 
   change(action, diff, id, callback) {
-    const copy = [...this._data];
-    this._data = null;
+    this._cache.get(this.key(), (error, copy) => {
+      if (error) {
+        callback(error);
+        return;
+      }
 
-    this.select().execute((error, data) => {
-      callback(error, error ? null : odiff(copy, data));
+      this._cache.del(this.key(), (cacheError) => {
+        if (cacheError) {
+          callback(cacheError);
+          return;
+        }
+
+        this.select().execute((selectError, data) => {
+          callback(selectError, selectError || data.length === 0 ?
+            null : odiff(copy, data));
+        });
+      });
     });
+  }
+
+  _keepalive() {
+    this._cache.touch(this.key(), this._lifetime);
   }
 }

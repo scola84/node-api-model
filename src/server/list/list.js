@@ -10,6 +10,7 @@ export default class ServerList {
     this._id = null;
     this._name = null;
     this._cache = null;
+    this._lifetime = null;
 
     this._validate = null;
     this._select = null;
@@ -20,7 +21,6 @@ export default class ServerList {
     this._order = '';
     this._count = 15;
 
-    this._meta = new Map();
     this._pages = new Map();
 
     this._connections = new Set();
@@ -28,9 +28,18 @@ export default class ServerList {
   }
 
   destroy() {
-    this._connections
-      .forEach((connection) => this._unbindConnection(connection));
+    this._connections.forEach((connection) => {
+      this._unbindConnection(connection);
+    });
+
+    this._pages.forEach((page) => {
+      page.destroy();
+    });
+
     this._connections.clear();
+    this._pages.clear();
+    
+    clearInterval(this._interval);
   }
 
   id(id) {
@@ -51,12 +60,14 @@ export default class ServerList {
     return this;
   }
 
-  cache(cache) {
+  cache(cache, lifetime) {
     if (typeof cache === 'undefined') {
       return this._cache;
     }
 
     this._cache = cache;
+    this._lifetime = lifetime;
+
     return this;
   }
 
@@ -141,31 +152,60 @@ export default class ServerList {
 
   subscribe(connection, action) {
     if (action === true) {
-      this._connections.add(connection);
-      this._bindConnection(connection);
+      this._subscribe(connection);
     } else if (action === false) {
-      this._connections.delete(connection);
+      this._unsubscribe(connection);
     }
 
     return this;
   }
 
-  meta(name, data) {
-    if (typeof data === 'undefined') {
-      return this._meta.get(name);
-    }
-
-    this._meta.set(name, data);
-    return this;
+  key() {
+    return '/' + this._name + '/' + this._id;
   }
 
-  page(index) {
+  meta(name, data, callback = () => {}) {
+    this._cache.get(this.key(), (error, cacheData) => {
+      if (typeof data === 'function') {
+        data(error, error || !cacheData ? null : cacheData[name]);
+        return;
+      }
+
+      if (error) {
+        callback(error);
+        return;
+      }
+
+      cacheData = cacheData || {};
+      cacheData[name] = data;
+
+      this._cache.set(this.key(), cacheData, this._lifetime, (cacheError) => {
+        if (cacheError) {
+          callback(cacheError);
+          return;
+        }
+
+        this._interval = setInterval(this._keepalive.bind(this),
+          this._lifetime * 0.9);
+
+        callback();
+      });
+    });
+  }
+
+  page(index, action) {
     index = Number(index);
+
+    if (action === false) {
+      this._pages.delete(index);
+      return this;
+    }
 
     if (!this._pages.has(index)) {
       this._pages.set(index, new ServerPage()
         .index(index)
         .list(this)
+        .cache(this._cache, this._lifetime)
         .validate(this._validate)
         .select(this._select));
     }
@@ -185,11 +225,18 @@ export default class ServerList {
         pages: pageDiffs
       };
 
-      if (this._meta.has('groups')) {
-        this._changeGroups(action, diff, callback);
-      } else if (this._meta.has('total')) {
-        this._changeTotal(action, diff, callback);
-      }
+      this._cache.get(this.key(), (cacheError, data) => {
+        if (cacheError) {
+          callback(cacheError);
+          return;
+        }
+
+        if (typeof data.groups !== 'undefined') {
+          this._changeGroups(action, diff, callback);
+        } else if (typeof data.total !== 'undefined') {
+          this._changeTotal(action, diff, callback);
+        }
+      });
     });
   }
 
@@ -214,6 +261,20 @@ export default class ServerList {
 
   _unbindConnection(connection) {
     connection.removeListener('close', this._handleClose);
+  }
+
+  _subscribe(connection) {
+    this._connections.add(connection);
+    this._bindConnection(connection);
+  }
+
+  _unsubscribe(connection) {
+    this._connections.delete(connection);
+    this._unbindConnection(connection);
+
+    if (this._connections.size === 0) {
+      this.destroy();
+    }
   }
 
   _changePages(action, diff, id, callback) {
@@ -242,35 +303,55 @@ export default class ServerList {
   }
 
   _changeGroups(action, diff, callback) {
-    const groups = this._meta.get('groups');
-    this._meta.delete('groups');
-
-    this.groups().execute((error, data) => {
+    this._cache.get(this.key(), (error, groups) => {
       if (error) {
         callback(error);
         return;
       }
 
-      diff.groups = odiff(groups, data);
+      this._cache.del(this.key(), (cacheError) => {
+        if (cacheError) {
+          callback(cacheError);
+          return;
+        }
 
-      this.notifyClients(action, diff);
-      callback(error, diff);
+        this.groups().execute((groupsError, data) => {
+          if (groupsError) {
+            callback(groupsError);
+            return;
+          }
+
+          diff.groups = odiff(groups, data);
+
+          this.notifyClients(action, diff);
+          callback(error, diff);
+        });
+      });
     });
   }
 
   _changeTotal(action, diff, callback) {
-    this._meta.delete('total');
-
-    this.total().execute((error, data) => {
+    this._cache.del(this.key(), (error) => {
       if (error) {
         callback(error);
         return;
       }
 
-      diff.total = data;
+      this.total().execute((totalError, data) => {
+        if (totalError) {
+          callback(totalError);
+          return;
+        }
 
-      this.notifyClients(action, diff);
-      callback(error, diff);
+        diff.total = data;
+
+        this.notifyClients(action, diff);
+        callback(error, diff);
+      });
     });
+  }
+
+  _keepalive() {
+    this._cache.touch(this.key(), this._lifetime);
   }
 }

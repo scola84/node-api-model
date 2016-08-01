@@ -41,7 +41,7 @@ export default class UpdateQuery extends Query {
       return;
     }
 
-    this._object.data(data, (objectError) => {
+    this._object.id(id).data(data, (objectError) => {
       if (objectError) {
         callback(objectError);
         return;
@@ -52,10 +52,7 @@ export default class UpdateQuery extends Query {
         object: this._object
       }, 'insert');
 
-      this._object
-        .id(id)
-        .notifyPeers('insert');
-
+      this._object.notifyPeers('insert');
       callback(null, data, this._object);
     });
   }

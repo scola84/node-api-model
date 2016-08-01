@@ -36,14 +36,13 @@ export default class ServerObject {
     this._connections.clear();
     clearInterval(this._interval);
 
-    if (cache === true) {
-      this._cache.delete(this._path());
-
-    }
-
     this._model.object({
       id: this._id
     }, 'delete');
+
+    if (cache === true) {
+      this._cache.del(this.key());
+    }
   }
 
   id(id) {
@@ -73,7 +72,7 @@ export default class ServerObject {
     return this;
   }
 
-  cache(cache, lifetime = 10000) {
+  cache(cache, lifetime) {
     if (typeof cache === 'undefined') {
       return this._cache;
     }
@@ -111,13 +110,17 @@ export default class ServerObject {
     return this;
   }
 
+  key() {
+    return '/' + this._name + '/' + this._id;
+  }
+
   data(data, callback = () => {}) {
     if (typeof data === 'function') {
-      this._cache.get(this._path(), data);
+      this._cache.get(this.key(), data);
       return;
     }
 
-    this._cache.set(this._path(), data, this._lifetime, (error) => {
+    this._cache.set(this.key(), data, this._lifetime, (error) => {
       if (error) {
         callback(error);
         return;
@@ -134,7 +137,7 @@ export default class ServerObject {
     if (action === true) {
       this._subscribe(connection);
     } else if (action === false) {
-      this._subscribe(connection);
+      this._unsubscribe(connection);
     }
 
     return this;
@@ -214,7 +217,7 @@ export default class ServerObject {
     this._connections.forEach((connection) => {
       connection.request({
         method: 'PUB',
-        path: this._path()
+        path: this.key()
       }).end({
         action,
         diff
@@ -231,7 +234,7 @@ export default class ServerObject {
 
     this._connection.request({
       method: 'PUB',
-      path: this._path()
+      path: this.key()
     }).end({
       action,
       diff
@@ -263,7 +266,7 @@ export default class ServerObject {
   }
 
   _changeUpdate(diff, callback) {
-    this._cache.get(this._path(), (error, data) => {
+    this._cache.get(this.key(), (error, data) => {
       if (error) {
         callback(error);
         return;
@@ -271,7 +274,7 @@ export default class ServerObject {
 
       data = applyDiff(Object.assign({}, data), diff);
 
-      this._cache.set(this._path(), data, this._lifetime, (setError) => {
+      this._cache.set(this.key(), data, this._lifetime, (setError) => {
         if (setError) {
           callback(setError);
           return;
@@ -288,11 +291,7 @@ export default class ServerObject {
     callback();
   }
 
-  _path() {
-    return '/' + this._name + '/' + this._id;
-  }
-
   _keepalive() {
-    this._cache.touch(this._path(), this._lifetime);
+    this._cache.touch(this.key(), this._lifetime);
   }
 }

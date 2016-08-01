@@ -16,16 +16,23 @@ export default class SelectQuery extends Query {
   }
 
   execute(callback = () => {}) {
-    if (this._page.data()) {
-      callback(null, this._page.data(), this._page);
-      return;
-    }
+    this._page.data((error, data) => {
+      if (error) {
+        callback(error);
+        return;
+      }
 
-    const filter = this._list.filter(true);
-    const order = this._list.order(true);
+      if (data) {
+        callback(null, data, this._page);
+        return;
+      }
 
-    this._validate(filter, order, (filterError, orderError) => {
-      this._handleValidate(filterError, orderError, filter, order, callback);
+      const filter = this._list.filter(true);
+      const order = this._list.order(true);
+
+      this._validate(filter, order, (filterError, orderError) => {
+        this._handleValidate(filterError, orderError, filter, order, callback);
+      });
     });
   }
 
@@ -52,7 +59,15 @@ export default class SelectQuery extends Query {
       return;
     }
 
-    this._page.data(data);
-    callback(null, data, this._page);
+    if (data.length === 0) {
+      console.log('PAGE EMPTY');
+      this._page.destroy(true);
+      callback();
+      return;
+    }
+
+    this._page.data(data, (pageError) => {
+      callback(pageError, data, this._page);
+    });
   }
 }
