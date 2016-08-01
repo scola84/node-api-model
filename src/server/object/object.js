@@ -266,17 +266,18 @@ export default class ServerObject {
   }
 
   _changeUpdate(diff, callback) {
-    this._cache.get(this.key(), (error, data) => {
+    this._cache.get(this.key(), (error, cacheData) => {
       if (error) {
         callback(error);
         return;
       }
 
-      data = applyDiff(Object.assign({}, data), diff);
+      cacheData = Object.assign({}, cacheData);
+      cacheData = applyDiff(cacheData, diff);
 
-      this._cache.set(this.key(), data, this._lifetime, (setError) => {
-        if (setError) {
-          callback(setError);
+      this._cache.set(this.key(), cacheData, this._lifetime, (cacheError) => {
+        if (cacheError) {
+          callback(cacheError);
           return;
         }
 

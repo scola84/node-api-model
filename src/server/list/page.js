@@ -105,8 +105,13 @@ export default class ServerPage {
         return;
       }
 
-      this.select().execute((queryError, queryData) => {
-        callback(queryError, queryError ? null : odiff(cacheData), queryData);
+      this.select().execute((queryError, data) => {
+        if (queryError) {
+          callback(queryError);
+          return;
+        }
+
+        callback(null, odiff(cacheData, data), data);
       }, true);
     });
   }
