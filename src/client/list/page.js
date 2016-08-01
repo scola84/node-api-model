@@ -16,6 +16,7 @@ export default class ClientPage {
 
   destroy() {
     this._unbindConnection();
+    this._list.page(this._index, false);
   }
 
   index(index) {
@@ -72,6 +73,11 @@ export default class ClientPage {
   }
 
   change(action, diff) {
+    if (diff === false) {
+      this.destroy();
+      return;
+    }
+
     this._data = applyDiff(this._data, diff);
   }
 

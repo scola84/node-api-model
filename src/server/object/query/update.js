@@ -20,22 +20,22 @@ export default class UpdateQuery extends Query {
   _handleData(data, request, callback) {
     request.removeAllListeners();
 
-    this._object.data((objectError, objectData) => {
-      if (objectError) {
-        callback(objectError);
+    this._object.data((error, cacheData) => {
+      if (error) {
+        callback(error);
         return;
       }
 
-      const changed = Object.assign({}, objectData, data);
-      const diff = odiff(objectData, changed);
+      const newData = Object.assign({}, cacheData, data);
+      const diff = odiff(cacheData, newData);
 
       if (diff.length === 0) {
         callback();
         return;
       }
 
-      this._validate(changed, request, (error) => {
-        this._handleValidate(error, changed, diff, request, callback);
+      this._validate(newData, request, (validateError) => {
+        this._handleValidate(validateError, newData, diff, request, callback);
       });
     });
   }

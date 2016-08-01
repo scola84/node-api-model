@@ -15,14 +15,14 @@ export default class SelectQuery extends Query {
     return this;
   }
 
-  execute(callback = () => {}) {
+  execute(callback = () => {}, force) {
     this._page.data((error, data) => {
       if (error) {
         callback(error);
         return;
       }
 
-      if (data) {
+      if (data && force !== true) {
         callback(null, data, this._page);
         return;
       }
@@ -60,9 +60,8 @@ export default class SelectQuery extends Query {
     }
 
     if (data.length === 0) {
-      console.log('PAGE EMPTY');
       this._page.destroy(true);
-      callback();
+      callback(null, data, this._page);
       return;
     }
 

@@ -178,8 +178,13 @@ export default class ClientList extends EventEmitter {
     return this;
   }
 
-  page(index) {
+  page(index, action) {
     index = Number(index);
+
+    if (action === false) {
+      this._pages.delete(index);
+      return this;
+    }
 
     if (!this._pages.has(index)) {
       this._pages.set(index, new ClientPage()

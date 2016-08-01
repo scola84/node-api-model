@@ -27,18 +27,18 @@ export default class ServerList {
     this._handleClose = (e, c) => this.subscribe(c, false);
   }
 
-  destroy() {
+  destroy(cache) {
     this._connections.forEach((connection) => {
       this._unbindConnection(connection);
     });
 
     this._pages.forEach((page) => {
-      page.destroy();
+      page.destroy(cache);
     });
 
     this._connections.clear();
     this._pages.clear();
-    
+
     clearInterval(this._interval);
   }
 
@@ -220,16 +220,16 @@ export default class ServerList {
         return;
       }
 
-      diff = {
-        id,
-        pages: pageDiffs
-      };
-
       this._cache.get(this.key(), (cacheError, data) => {
         if (cacheError) {
           callback(cacheError);
           return;
         }
+
+        diff = {
+          id,
+          pages: pageDiffs
+        };
 
         if (typeof data.groups !== 'undefined') {
           this._changeGroups(action, diff, callback);
@@ -273,7 +273,7 @@ export default class ServerList {
     this._unbindConnection(connection);
 
     if (this._connections.size === 0) {
-      this.destroy();
+      this.destroy(false);
     }
   }
 
@@ -282,7 +282,7 @@ export default class ServerList {
     let count = 0;
 
     this._pages.forEach((page, index) => {
-      page.change(action, diff, id, (error, pageDiff) => {
+      page.change(action, diff, id, (error, pageDiff, data) => {
         if (error) {
           callback(error);
           return;
@@ -291,7 +291,9 @@ export default class ServerList {
         index = Number(index);
         count += 1;
 
-        if (pageDiff.length > 0) {
+        if (data.length === 0) {
+          pageDiffs[index] = false;
+        } else if (pageDiff.length > 0) {
           pageDiffs[index] = pageDiff;
         }
 
@@ -303,52 +305,38 @@ export default class ServerList {
   }
 
   _changeGroups(action, diff, callback) {
-    this._cache.get(this.key(), (error, groups) => {
+    this.meta('groups', (error, cacheData) => {
       if (error) {
         callback(error);
         return;
       }
 
-      this._cache.del(this.key(), (cacheError) => {
-        if (cacheError) {
-          callback(cacheError);
+      this.groups().execute((groupsError, queryData) => {
+        if (groupsError) {
+          callback(groupsError);
           return;
         }
 
-        this.groups().execute((groupsError, data) => {
-          if (groupsError) {
-            callback(groupsError);
-            return;
-          }
+        diff.groups = odiff(cacheData, queryData);
 
-          diff.groups = odiff(groups, data);
-
-          this.notifyClients(action, diff);
-          callback(error, diff);
-        });
-      });
+        this.notifyClients(action, diff);
+        callback(null, diff);
+      }, true);
     });
   }
 
   _changeTotal(action, diff, callback) {
-    this._cache.del(this.key(), (error) => {
+    this.total().execute((error, data) => {
       if (error) {
         callback(error);
         return;
       }
 
-      this.total().execute((totalError, data) => {
-        if (totalError) {
-          callback(totalError);
-          return;
-        }
+      diff.total = data;
 
-        diff.total = data;
-
-        this.notifyClients(action, diff);
-        callback(error, diff);
-      });
-    });
+      this.notifyClients(action, diff);
+      callback(null, diff);
+    }, true);
   }
 
   _keepalive() {

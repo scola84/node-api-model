@@ -1,14 +1,14 @@
 import Query from '../query';
 
 export default class TotalQuery extends Query {
-  execute(callback = () => {}) {
+  execute(callback = () => {}, force) {
     this._list.meta('total', (error, data) => {
       if (error) {
         callback(error);
         return;
       }
 
-      if (data) {
+      if (data && force !== true) {
         callback(null, data, this._list);
         return;
       }

@@ -99,23 +99,15 @@ export default class ServerPage {
   }
 
   change(action, diff, id, callback) {
-    this._cache.get(this.key(), (error, copy) => {
+    this._cache.get(this.key(), (error, cacheData) => {
       if (error) {
         callback(error);
         return;
       }
 
-      this._cache.del(this.key(), (cacheError) => {
-        if (cacheError) {
-          callback(cacheError);
-          return;
-        }
-
-        this.select().execute((selectError, data) => {
-          callback(selectError, selectError || data.length === 0 ?
-            null : odiff(copy, data));
-        });
-      });
+      this.select().execute((queryError, queryData) => {
+        callback(queryError, queryError ? null : odiff(cacheData), queryData);
+      }, true);
     });
   }
 

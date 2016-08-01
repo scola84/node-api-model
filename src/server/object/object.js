@@ -286,8 +286,8 @@ export default class ServerObject {
   }
 
   _changeDelete(callback) {
-    this.destroy(true);
     this.notifyClients('delete');
+    this.destroy(true);
     callback();
   }
 
