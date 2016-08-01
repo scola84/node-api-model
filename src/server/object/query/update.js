@@ -20,16 +20,23 @@ export default class UpdateQuery extends Query {
   _handleData(data, request, callback) {
     request.removeAllListeners();
 
-    const changed = Object.assign({}, this._object.data(), data);
-    const diff = odiff(this._object.data(), changed);
+    this._object.data((objectError, objectData) => {
+      if (objectError) {
+        callback(objectError);
+        return;
+      }
 
-    if (diff.length === 0) {
-      callback();
-      return;
-    }
+      const changed = Object.assign({}, objectData, data);
+      const diff = odiff(objectData, changed);
 
-    this._validate(changed, request, (error) => {
-      this._handleValidate(error, changed, diff, request, callback);
+      if (diff.length === 0) {
+        callback();
+        return;
+      }
+
+      this._validate(changed, request, (error) => {
+        this._handleValidate(error, changed, diff, request, callback);
+      });
     });
   }
 
@@ -50,10 +57,14 @@ export default class UpdateQuery extends Query {
       return;
     }
 
-    this._object
-      .data(changed)
-      .notifyPeers('update', diff);
+    this._object.data(changed, (objectError) => {
+      if (objectError) {
+        callback(objectError);
+        return;
+      }
 
-    callback(null, changed, this._object);
+      this._object.notifyPeers('update', diff);
+      callback(null, changed, this._object);
+    });
   }
 }

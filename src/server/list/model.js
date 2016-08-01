@@ -3,6 +3,7 @@ import ServerList from './list';
 export default class ServerListModel {
   constructor() {
     this._name = null;
+    this._cache = null;
     this._groups = null;
     this._total = null;
     this._select = null;
@@ -13,6 +14,11 @@ export default class ServerListModel {
 
   name(name) {
     this._name = name;
+    return this;
+  }
+
+  cache(cache) {
+    this._cache = cache;
     return this;
   }
 
@@ -45,6 +51,7 @@ export default class ServerListModel {
     return new ServerList()
       .id(id)
       .name(this._name)
+      .cache(this._cache)
       .validate(this._validate)
       .groups(this._groups)
       .total(this._total)

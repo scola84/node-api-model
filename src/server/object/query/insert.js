@@ -41,16 +41,22 @@ export default class UpdateQuery extends Query {
       return;
     }
 
-    this._object.model().object({
-      id,
-      object: this._object
-    }, 'insert');
+    this._object.data(data, (objectError) => {
+      if (objectError) {
+        callback(objectError);
+        return;
+      }
 
-    this._object
-      .id(id)
-      .data(data)
-      .notifyPeers('insert');
+      this._object.model().object({
+        id,
+        object: this._object
+      }, 'insert');
 
-    callback(null, data, this._object);
+      this._object
+        .id(id)
+        .notifyPeers('insert');
+
+      callback(null, data, this._object);
+    });
   }
 }

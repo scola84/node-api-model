@@ -2,13 +2,20 @@ import Query from '../query';
 
 export default class SelectQuery extends Query {
   execute(request, callback = () => {}) {
-    if (this._object.data()) {
-      callback(null, this._object.data(), this._object);
-      return;
-    }
+    this._object.data((error, data) => {
+      if (error) {
+        callback(error);
+        return;
+      }
 
-    this._query(request, (error, data) => {
-      this._handleQuery(error, data, callback);
+      if (data) {
+        callback(null, data, this._object);
+        return;
+      }
+
+      this._query(request, (queryError, queryData) => {
+        this._handleQuery(queryError, queryData, callback);
+      });
     });
   }
 
@@ -23,7 +30,8 @@ export default class SelectQuery extends Query {
       return;
     }
 
-    this._object.data(data);
-    callback(null, data, this._object);
+    this._object.data(data, (objectError) => {
+      callback(objectError, data, this._object);
+    });
   }
 }

@@ -9,8 +9,9 @@ export default class ServerList {
   constructor() {
     this._id = null;
     this._name = null;
-    this._validate = null;
+    this._cache = null;
 
+    this._validate = null;
     this._select = null;
     this._groups = null;
     this._total = null;
@@ -47,6 +48,15 @@ export default class ServerList {
     }
 
     this._name = name;
+    return this;
+  }
+
+  cache(cache) {
+    if (typeof cache === 'undefined') {
+      return this._cache;
+    }
+
+    this._cache = cache;
     return this;
   }
 

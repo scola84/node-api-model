@@ -4,6 +4,7 @@ export default class ServerObjectModel {
   constructor() {
     this._name = null;
     this._model = null;
+    this._cache = null;
     this._connection = null;
 
     this._authorize = (r, c) => c();
@@ -22,6 +23,11 @@ export default class ServerObjectModel {
 
   model(model) {
     this._model = model;
+    return this;
+  }
+
+  cache(cache) {
+    this._cache = cache;
     return this;
   }
 
@@ -65,6 +71,7 @@ export default class ServerObjectModel {
       .id(id)
       .name(this._name)
       .model(this._model)
+      .cache(this._cache)
       .connection(this._connection)
       .authorize(this._authorize)
       .validate(this._validate)

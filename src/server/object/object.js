@@ -9,6 +9,11 @@ export default class ServerObject {
     this._id = null;
     this._name = null;
     this._model = null;
+
+    this._cache = null;
+    this._lifetime = null;
+    this._interval = null;
+
     this._connection = null;
 
     this._authorize = null;
@@ -19,16 +24,22 @@ export default class ServerObject {
     this._update = null;
     this._delete = null;
 
-    this._data = null;
-
     this._connections = new Set();
     this._handleClose = (e, c) => this.subscribe(c, false);
   }
 
-  destroy() {
-    this._connections
-      .forEach((connection) => this._unbindConnection(connection));
+  destroy(cache) {
+    this._connections.forEach((connection) => {
+      this._unbindConnection(connection);
+    });
+
     this._connections.clear();
+    clearInterval(this._interval);
+
+    if (cache === true) {
+      this._cache.delete(this._path());
+
+    }
 
     this._model.object({
       id: this._id
@@ -62,6 +73,17 @@ export default class ServerObject {
     return this;
   }
 
+  cache(cache, lifetime = 10000) {
+    if (typeof cache === 'undefined') {
+      return this._cache;
+    }
+
+    this._cache = cache;
+    this._lifetime = lifetime;
+
+    return this;
+  }
+
   connection(connection) {
     if (typeof connection === 'undefined') {
       return this._connection;
@@ -89,21 +111,30 @@ export default class ServerObject {
     return this;
   }
 
-  data(data) {
-    if (typeof data === 'undefined') {
-      return this._data;
+  data(data, callback = () => {}) {
+    if (typeof data === 'function') {
+      this._cache.get(this._path(), data);
+      return;
     }
 
-    this._data = data;
-    return this;
+    this._cache.set(this._path(), data, this._lifetime, (error) => {
+      if (error) {
+        callback(error);
+        return;
+      }
+
+      this._interval = setInterval(this._keepalive.bind(this),
+        this._lifetime * 0.9);
+
+      callback(null, data);
+    });
   }
 
   subscribe(connection, action) {
     if (action === true) {
-      this._connections.add(connection);
-      this._bindConnection(connection);
+      this._subscribe(connection);
     } else if (action === false) {
-      this._connections.delete(connection);
+      this._subscribe(connection);
     }
 
     return this;
@@ -167,15 +198,13 @@ export default class ServerObject {
     return this;
   }
 
-  change(action, diff) {
-    this.notifyClients(action, diff);
-
+  change(action, diff, callback = () => {}) {
     if (action === 'update') {
-      this._data = applyDiff(Object.assign({}, this._data), diff);
+      this._changeUpdate(diff, callback);
     }
 
     if (action === 'delete') {
-      this.destroy();
+      this._changeDelete(callback);
     }
 
     return this;
@@ -185,7 +214,7 @@ export default class ServerObject {
     this._connections.forEach((connection) => {
       connection.request({
         method: 'PUB',
-        path: '/' + this._name + '/' + this._id
+        path: this._path()
       }).end({
         action,
         diff
@@ -202,7 +231,7 @@ export default class ServerObject {
 
     this._connection.request({
       method: 'PUB',
-      path: '/' + this._name + '/' + this._id
+      path: this._path()
     }).end({
       action,
       diff
@@ -217,5 +246,53 @@ export default class ServerObject {
 
   _unbindConnection(connection) {
     connection.removeListener('close', this._handleClose);
+  }
+
+  _subscribe(connection) {
+    this._connections.add(connection);
+    this._bindConnection(connection);
+  }
+
+  _unsubscribe(connection) {
+    this._connections.delete(connection);
+    this._unbindConnection(connection);
+
+    if (this._connections.size === 0) {
+      this.destroy(false);
+    }
+  }
+
+  _changeUpdate(diff, callback) {
+    this._cache.get(this._path(), (error, data) => {
+      if (error) {
+        callback(error);
+        return;
+      }
+
+      data = applyDiff(Object.assign({}, data), diff);
+
+      this._cache.set(this._path(), data, this._lifetime, (setError) => {
+        if (setError) {
+          callback(setError);
+          return;
+        }
+
+        this.notifyClients('update', diff);
+      });
+    });
+  }
+
+  _changeDelete(callback) {
+    this.destroy(true);
+    this.notifyClients('delete');
+    callback();
+  }
+
+  _path() {
+    return '/' + this._name + '/' + this._id;
+  }
+
+  _keepalive() {
+    this._cache.touch(this._path(), this._lifetime);
   }
 }

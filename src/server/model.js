@@ -5,6 +5,7 @@ import ServerObjectModel from './object/model';
 export default class ServerModel {
   constructor() {
     this._name = null;
+    this._cache = null;
     this._connection = null;
 
     this._lists = new Map();
@@ -13,6 +14,11 @@ export default class ServerModel {
 
   name(name) {
     this._name = name;
+    return this;
+  }
+
+  cache(cache) {
+    this._cache = cache;
     return this;
   }
 
@@ -35,7 +41,8 @@ export default class ServerModel {
   list(params) {
     if (typeof params === 'undefined') {
       this._list = new ServerListModel()
-        .name(this._name);
+        .name(this._name)
+        .cache(this._cache);
       return this._list;
     }
 
@@ -62,6 +69,7 @@ export default class ServerModel {
       this._object = new ServerObjectModel()
         .name(this._name)
         .model(this)
+        .cache(this._cache)
         .connection(this._connection);
 
       return this._object;
