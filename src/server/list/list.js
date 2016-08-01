@@ -213,24 +213,6 @@ export default class ServerList {
     });
   }
 
-  _handleChangeResult(error, pageDiffs, action, diff, id, callback) {
-    if (error) {
-      callback(error);
-      return;
-    }
-
-    diff = {
-      id,
-      pages: pageDiffs
-    };
-
-    if (this._type === 'groups') {
-      this._changeGroups(action, diff, callback);
-    } else if (this._type === 'total') {
-      this._changeTotal(action, diff, callback);
-    }
-  }
-
   notifyClients(action, diff) {
     this._connections.forEach((connection) => {
       connection.request({
@@ -321,6 +303,24 @@ export default class ServerList {
 
       callback();
     });
+  }
+
+  _handleChangeResult(error, pageDiffs, action, diff, id, callback) {
+    if (error) {
+      callback(error);
+      return;
+    }
+
+    diff = {
+      id,
+      pages: pageDiffs
+    };
+
+    if (this._type === 'groups') {
+      this._changeGroups(action, diff, callback);
+    } else if (this._type === 'total') {
+      this._changeTotal(action, diff, callback);
+    }
   }
 
   _changeGroups(action, diff, callback) {
