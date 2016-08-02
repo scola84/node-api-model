@@ -4,6 +4,7 @@ export default class ClientListModel {
   constructor() {
     this._name = null;
     this._model = null;
+    this._cache = null;
     this._connection = null;
 
     this._validate = (d, c) => c();
@@ -16,6 +17,11 @@ export default class ClientListModel {
 
   model(model) {
     this._model = model;
+    return this;
+  }
+
+  cache(cache) {
+    this._cache = cache;
     return this;
   }
 
@@ -34,6 +40,7 @@ export default class ClientListModel {
       .id(id)
       .name(this._name)
       .model(this._model)
+      .cache(this._cache)
       .connection(this._connection)
       .validate(this._validate)
       .filter(params.filter)

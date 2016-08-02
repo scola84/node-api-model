@@ -2,19 +2,19 @@ import Query from '../query';
 
 export default class SelectQuery extends Query {
   execute(request, callback = () => {}) {
-    this._object.data((error, data) => {
+    this._object.data((error, cacheData) => {
       if (error) {
         callback(error);
         return;
       }
 
-      if (data) {
-        callback(null, data, this._object);
+      if (cacheData) {
+        callback(null, cacheData, this._object);
         return;
       }
 
-      this._query(request, (queryError, queryData) => {
-        this._handleQuery(queryError, queryData, callback);
+      this._query(request, (queryError, data) => {
+        this._handleQuery(queryError, data, callback);
       });
     });
   }

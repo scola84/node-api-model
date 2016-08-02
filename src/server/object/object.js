@@ -41,7 +41,7 @@ export default class ServerObject {
     }, 'delete');
 
     if (cache === true) {
-      this._cache.del(this.key());
+      this._cache.delete(this.key());
     }
   }
 
@@ -126,8 +126,10 @@ export default class ServerObject {
         return;
       }
 
-      this._interval = setInterval(this._keepalive.bind(this),
-        this._lifetime * 0.9);
+      if (this._lifetime) {
+        this._interval = setInterval(this._keepalive.bind(this),
+          this._lifetime * 0.9);
+      }
 
       callback(null, data);
     });
@@ -281,6 +283,7 @@ export default class ServerObject {
           return;
         }
 
+        callback(null, cacheData);
         this.notifyClients('update', diff);
       });
     });

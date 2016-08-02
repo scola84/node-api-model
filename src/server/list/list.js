@@ -1,8 +1,7 @@
 import eachOf from 'async/eachOf';
 import odiff from 'odiff';
 import ServerPage from './page';
-import GroupsQuery from './query/groups';
-import TotalQuery from './query/total';
+import MetaQuery from './query/meta';
 import parseFilter from '../../helper/parse-filter';
 import parseOrder from '../../helper/parse-order';
 
@@ -16,15 +15,13 @@ export default class ServerList {
     this._interval = null;
 
     this._validate = null;
+    this._meta = null;
     this._select = null;
-    this._groups = null;
-    this._total = null;
 
     this._filter = '';
     this._order = '';
     this._count = 15;
 
-    this._type = null;
     this._pages = new Map();
 
     this._connections = new Set();
@@ -128,30 +125,29 @@ export default class ServerList {
     return this;
   }
 
-  groups(groups) {
-    if (typeof groups === 'undefined') {
-      return this._groups;
-    }
-
-    this._groups = new GroupsQuery()
-      .list(this)
-      .query(groups)
-      .validate(this._validate);
-
-    return this;
+  key() {
+    return '/' + this._name + '/' + this._id;
   }
 
-  total(total) {
-    if (typeof total === 'undefined') {
-      return this._total;
+  data(data, callback = () => {}) {
+    if (typeof data === 'function') {
+      this._cache.get(this.key(), data);
+      return;
     }
 
-    this._total = new TotalQuery()
-      .list(this)
-      .query(total)
-      .validate(this._validate);
+    this._cache.set(this.key(), data, this._lifetime, (error) => {
+      if (error) {
+        callback(error);
+        return;
+      }
 
-    return this;
+      if (this._lifetime) {
+        this._interval = setInterval(this._keepalive.bind(this),
+          this._lifetime * 0.9);
+      }
+
+      callback(null, data);
+    });
   }
 
   subscribe(connection, action) {
@@ -164,19 +160,17 @@ export default class ServerList {
     return this;
   }
 
-  key() {
-    return '/' + this._name + '/' + this._id;
-  }
+  meta(meta) {
+    if (typeof meta === 'undefined') {
+      return this._meta;
+    }
 
-  meta(name, data, callback = () => {}) {
-    this._cache.get(this.key(), (error, cacheData) => {
-      if (typeof data === 'function') {
-        this._getMeta(error, cacheData, name, data);
-        return;
-      }
+    this._meta = new MetaQuery()
+      .list(this)
+      .query(meta)
+      .validate(this._validate);
 
-      this._setMeta(error, cacheData, name, data, callback);
-    });
+    return this;
   }
 
   page(index, action) {
@@ -205,11 +199,40 @@ export default class ServerList {
     const indices = [...this._pages.keys()];
 
     eachOf(pages, (page, index, eachCallback) => {
-      this._handleChange(pageDiffs, page, indices[index],
-        action, diff, id, eachCallback);
+      this._handleChange(pageDiffs, page, indices[index], eachCallback);
     }, (error) => {
-      this._handleChangeResult(error, pageDiffs,
-        action, diff, id, callback);
+      if (error) {
+        callback(error);
+        return;
+      }
+
+      diff = {
+        id,
+        pages: pageDiffs
+      };
+
+      this._changeMeta(action, diff, callback);
+    });
+  }
+
+  _changeMeta(action, diff, callback) {
+    this.meta().execute((error, cacheData) => {
+      if (error) {
+        callback(error);
+        return;
+      }
+
+      this.meta().execute((metaError, data) => {
+        if (metaError) {
+          callback(metaError);
+          return;
+        }
+
+        diff.meta = odiff(cacheData, data);
+
+        this.notifyClients(action, diff);
+        callback(null, diff);
+      }, true);
     });
   }
 
@@ -250,44 +273,8 @@ export default class ServerList {
     }
   }
 
-  _getMeta(error, cacheData, name, callback) {
-    if (error) {
-      callback(error);
-      return;
-    }
-
-    callback(null, cacheData && cacheData[name]);
-  }
-
-  _setMeta(error, cacheData, name, data, callback) {
-    if (error) {
-      callback(error);
-      return;
-    }
-
-    cacheData = cacheData || {};
-    cacheData[name] = data;
-
-    this._cache.set(this.key(), cacheData, this._lifetime, (cacheError) => {
-      this._handleSetMeta(cacheError, name, callback);
-    });
-  }
-
-  _handleSetMeta(error, name, callback) {
-    if (error) {
-      callback(error);
-      return;
-    }
-
-    this._type = name;
-    this._interval = setInterval(this._keepalive.bind(this),
-      this._lifetime * 0.9);
-
-    callback();
-  }
-
-  _handleChange(pageDiffs, page, index, action, diff, id, callback) {
-    page.change(action, diff, id, (error, pageDiff, data) => {
+  _handleChange(pageDiffs, page, index, callback) {
+    page.change((error, pageDiff, data) => {
       if (error) {
         callback(error);
         return;
@@ -303,68 +290,6 @@ export default class ServerList {
 
       callback();
     });
-  }
-
-  _handleChangeResult(error, pageDiffs, action, diff, id, callback) {
-    if (error) {
-      callback(error);
-      return;
-    }
-
-    diff = {
-      id,
-      pages: pageDiffs
-    };
-
-    if (this._type === 'groups') {
-      this._changeGroups(action, diff, callback);
-    } else if (this._type === 'total') {
-      this._changeTotal(action, diff, callback);
-    }
-  }
-
-  _changeGroups(action, diff, callback) {
-    this.meta('groups', (error, cacheData) => {
-      if (error) {
-        callback(error);
-        return;
-      }
-
-      this.groups().execute((queryError, data) => {
-        this._handleChangeGroups(queryError, cacheData, data,
-          action, diff, callback);
-      }, true);
-    });
-  }
-
-  _handleChangeGroups(error, cacheData, data, action, diff, callback) {
-    if (error) {
-      callback(error);
-      return;
-    }
-
-    diff.groups = odiff(cacheData, data);
-
-    this.notifyClients(action, diff);
-    callback(null, diff);
-  }
-
-  _changeTotal(action, diff, callback) {
-    this.total().execute((error, data) => {
-      this._handleChangeTotal(error, data, action, diff, callback);
-    }, true);
-  }
-
-  _handleChangeTotal(error, data, action, diff, callback) {
-    if (error) {
-      callback(error);
-      return;
-    }
-
-    diff.total = data;
-
-    this.notifyClients(action, diff);
-    callback(null, diff);
   }
 
   _keepalive() {

@@ -1,8 +1,18 @@
 import Query from '../query';
 
-export default class TotalQuery extends Query {
+export default class MetaQuery extends Query {
+  constructor() {
+    super();
+    this._type = null;
+  }
+
+  type(type) {
+    this._type = type;
+    return this;
+  }
+
   execute(callback = () => {}, force) {
-    this._list.meta('total', (error, data) => {
+    this._list.data((error, data) => {
       if (error) {
         callback(error);
         return;
@@ -13,8 +23,8 @@ export default class TotalQuery extends Query {
         return;
       }
 
-      const filter = this.filter(true);
-      const order = this.order(true);
+      const filter = this._list.filter(true);
+      const order = this._list.order(true);
 
       this._validate(filter, order, (filterError, orderError) => {
         this._handleValidate(filterError, orderError, filter, order, callback);
@@ -40,8 +50,8 @@ export default class TotalQuery extends Query {
       return;
     }
 
-    this._list.meta('total', data.total, (listError) => {
-      callback(listError, data.total, this._list);
+    this._list.data(data, (listError) => {
+      callback(listError, data, this._list);
     });
   }
 }

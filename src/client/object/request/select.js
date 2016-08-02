@@ -2,18 +2,25 @@ import ModelError from '../../error';
 import Request from '../request';
 
 export default class SelectRequest extends Request {
-  execute(callback = () => {}) {
-    if (this._object.data()) {
-      callback(null, this._object.data(), this._object);
-      return;
-    }
+  execute(callback = () => {}, force) {
+    this._object.data((error, data) => {
+      if (error) {
+        callback(error);
+        return;
+      }
 
-    this._request(callback);
+      if (data && force !== true) {
+        callback(null, data, this._object);
+        return;
+      }
+
+      this._request(callback);
+    });
   }
 
   _request(callback) {
     const request = {
-      path: '/' + this._object.name() + '/' + this._object.id()
+      path: this._object.key()
     };
 
     this._object.connection()
@@ -36,14 +43,14 @@ export default class SelectRequest extends Request {
   _handleData(data, response, callback) {
     response.removeAllListeners();
 
-    const error = response.statusCode === 200 ?
-      null : new ModelError(data, response.statusCode);
-
-    if (response.statusCode === 200) {
-      this._object.data(data);
+    if (response.statusCode !== 200) {
+      callback(new ModelError(data, response.statusCode));
+      return;
     }
 
-    callback(error, data, this._object);
+    this._object.data(data, (error) => {
+      callback(error, data, this._object);
+    });
   }
 
   _handleError(error, response, callback) {

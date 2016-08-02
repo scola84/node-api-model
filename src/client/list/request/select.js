@@ -16,17 +16,24 @@ export default class TotalRequest extends Request {
     return this;
   }
 
-  execute(callback = () => {}) {
-    if (this._page.data()) {
-      callback(null, this._page.data(), this._page);
-      return;
-    }
+  execute(callback = () => {}, force) {
+    this._page.data((error, cacheData) => {
+      if (error) {
+        callback(error);
+        return;
+      }
 
-    const filter = this._list.filter(true);
-    const order = this._list.order(true);
+      if (cacheData && force !== true) {
+        callback(null, cacheData, this._page);
+        return;
+      }
 
-    this._validate(filter, order, (filterError, orderError) => {
-      this._handleValidate(filterError, orderError, callback);
+      const filter = this._list.filter(true);
+      const order = this._list.order(true);
+
+      this._validate(filter, order, (filterError, orderError) => {
+        this._handleValidate(filterError, orderError, callback);
+      });
     });
   }
 
@@ -69,14 +76,14 @@ export default class TotalRequest extends Request {
   _handleData(data, response, callback) {
     response.removeAllListeners();
 
-    const error = response.statusCode === 200 ?
-      null : new ModelError(data, response.statusCode);
-
-    if (response.statusCode === 200) {
-      this._page.data(data);
+    if (response.statusCode !== 200) {
+      callback(new ModelError(data, response.statusCode));
+      return;
     }
 
-    callback(error, data, this._page);
+    this._page.data(data, (error) => {
+      callback(error, data, this._page);
+    });
   }
 
   _handleError(error, response, callback) {

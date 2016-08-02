@@ -1,7 +1,7 @@
 import EventEmitter from 'events';
+import eachOf from 'async/eachOf';
+import MetaRequest from './request/meta';
 import ClientPage from './page';
-import GroupsRequest from './request/groups';
-import TotalRequest from './request/total';
 import applyDiff from '../../helper/apply-diff';
 import parseFilter from '../../helper/parse-filter';
 import parseOrder from '../../helper/parse-order';
@@ -13,11 +13,14 @@ export default class ClientList extends EventEmitter {
     this._id = null;
     this._name = null;
     this._model = null;
+
+    this._cache = null;
+    this._lifetime = null;
+    this._interval = null;
+
     this._connection = null;
     this._validate = null;
-
-    this._groups = null;
-    this._total = null;
+    this._meta = null;
     this._select = null;
 
     this._subscribed = null;
@@ -26,14 +29,24 @@ export default class ClientList extends EventEmitter {
     this._order = '';
     this._count = 15;
 
-    this._meta = new Map();
     this._pages = new Map();
 
     this._handleOpen = () => this._open();
   }
 
-  destroy() {
+  destroy(cache) {
     this._unbindConnection();
+
+    this._pages.forEach((page) => {
+      page.destroy(cache);
+    });
+
+    this._pages.clear();
+    clearInterval(this._interval);
+
+    if (cache === true) {
+      this._cache.delete(this.key());
+    }
 
     if (this._subscribed) {
       this.subscribe(false);
@@ -64,6 +77,24 @@ export default class ClientList extends EventEmitter {
     }
 
     this._model = model;
+    return this;
+  }
+
+  cache(cache) {
+    if (typeof cache === 'undefined') {
+      return this._cache;
+    }
+
+    this._cache = cache;
+    return this;
+  }
+
+  lifetime(lifetime) {
+    if (typeof lifetime === 'undefined') {
+      return this._lifetime;
+    }
+
+    this._lifetime = lifetime;
     return this;
   }
 
@@ -122,6 +153,31 @@ export default class ClientList extends EventEmitter {
     return this;
   }
 
+  key() {
+    return '/' + this._name + '/' + this._id;
+  }
+
+  data(data, callback = () => {}) {
+    if (typeof data === 'function') {
+      this._cache.get(this.key(), data);
+      return;
+    }
+
+    this._cache.set(this.key(), data, this._lifetime, (error) => {
+      if (error) {
+        callback(error);
+        return;
+      }
+
+      if (this._lifetime) {
+        this._interval = setInterval(this._keepalive.bind(this),
+          this._lifetime * 0.9);
+      }
+
+      callback(null, data);
+    });
+  }
+
   subscribe(subscribed) {
     this._subscribed = subscribed;
 
@@ -137,45 +193,14 @@ export default class ClientList extends EventEmitter {
     return this;
   }
 
-  groups() {
-    if (!this._groups) {
-      this._groups = new GroupsRequest()
+  meta() {
+    if (!this._meta) {
+      this._meta = new MetaRequest()
         .list(this)
         .validate(this._validate);
     }
 
-    return this._groups;
-  }
-
-  total() {
-    if (!this._total) {
-      this._total = new TotalRequest()
-        .list(this)
-        .validate(this._validate);
-    }
-
-    return this._total;
-  }
-
-  meta(name, data) {
-    if (typeof data === 'undefined') {
-      return this._meta.get(name);
-    }
-
-    if (name === 'groups') {
-      let total = 0;
-
-      data.forEach((group) => {
-        group.begin = total;
-        group.end = total + group.total;
-        total = group.end;
-      });
-
-      this._meta.set('total', total);
-    }
-
-    this._meta.set(name, data);
-    return this;
+    return this._meta;
   }
 
   page(index, action) {
@@ -190,33 +215,30 @@ export default class ClientList extends EventEmitter {
       this._pages.set(index, new ClientPage()
         .index(index)
         .list(this)
+        .cache(this._cache)
+        .lifetime(this._lifetime)
         .validate(this._validate));
     }
 
     return this._pages.get(index);
   }
 
-  change(action, diff) {
-    if (diff.groups) {
-      this.meta('groups', applyDiff(this.meta('groups'), diff.groups));
-    } else if (diff.total) {
-      this.meta('total', diff.total);
-    }
+  change(action, diff, callback = () => {}) {
+    const pages = [...this._pages.values()];
+    const indices = [...this._pages.keys()];
 
-    const indices = Object.keys(diff.pages);
-    let page = null;
-
-    indices.forEach((index) => {
-      index = Number(index);
-      page = this._pages.get(index);
-
-      if (page) {
-        page.change(action, diff.pages[index]);
+    eachOf(pages, (page, index, eachCallback) => {
+      if (diff.pages[indices[index]]) {
+        page.change(action, diff.pages[indices[index]], eachCallback);
       }
-    });
+    }, (error) => {
+      if (error) {
+        callback(error);
+        return;
+      }
 
-    this.emit('change', action, diff, indices);
-    return this;
+      this._changeMeta(action, diff, callback);
+    });
   }
 
   _bindConnection() {
@@ -232,15 +254,32 @@ export default class ClientList extends EventEmitter {
       this.subscribe(true);
     }
 
-    if (this._meta.has('groups')) {
-      this._meta.delete('groups');
-      this._meta.delete('total');
-      this.groups().execute();
-    }
+    this.meta().execute(null, true);
+  }
 
-    if (this._meta.has('total')) {
-      this._meta.delete('total');
-      this.total().execute();
-    }
+  _changeMeta(action, diff, callback) {
+    this._cache.get(this.key(), (error, cacheData) => {
+      if (error) {
+        callback(error);
+        return;
+      }
+
+      cacheData = Object.assign({}, cacheData);
+      cacheData = applyDiff(cacheData, diff.meta);
+
+      this._cache.set(this.key(), cacheData, this._lifetime, (cacheError) => {
+        if (cacheError) {
+          callback(cacheError);
+          return;
+        }
+
+        callback(null, diff);
+        this.emit(action, diff);
+      });
+    });
+  }
+
+  _keepalive() {
+    this._cache.touch(this.key(), this._lifetime);
   }
 }

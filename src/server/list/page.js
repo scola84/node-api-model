@@ -19,7 +19,7 @@ export default class ServerPage {
     this._list.page(this._index, false);
 
     if (cache === true) {
-      this._cache.del(this.key());
+      this._cache.delete(this.key());
     }
   }
 
@@ -77,8 +77,10 @@ export default class ServerPage {
         return;
       }
 
-      this._interval = setInterval(this._keepalive.bind(this),
-        this._lifetime * 0.9);
+      if (this._lifetime) {
+        this._interval = setInterval(this._keepalive.bind(this),
+          this._lifetime * 0.9);
+      }
 
       callback();
     });
@@ -98,7 +100,7 @@ export default class ServerPage {
     return this;
   }
 
-  change(action, diff, id, callback) {
+  change(callback) {
     this._cache.get(this.key(), (error, cacheData) => {
       if (error) {
         callback(error);

@@ -5,6 +5,7 @@ import ClientObjectModel from './object/model';
 export default class ClientModel {
   constructor() {
     this._name = null;
+    this._cache = null;
     this._connection = null;
 
     this._lists = new Map();
@@ -13,6 +14,11 @@ export default class ClientModel {
 
   name(name) {
     this._name = name;
+    return this;
+  }
+
+  cache(cache) {
+    this._cache = cache;
     return this;
   }
 
@@ -26,6 +32,7 @@ export default class ClientModel {
       this._list = new ClientListModel()
         .name(this._name)
         .model(this)
+        .cache(this._cache)
         .connection(this._connection);
       return this._list;
     }
@@ -53,6 +60,7 @@ export default class ClientModel {
       this._object = new ClientObjectModel()
         .name(this._name)
         .model(this)
+        .cache(this._cache)
         .connection(this._connection);
 
       return this._object;

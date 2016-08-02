@@ -5,7 +5,7 @@ export default class ServerListModel {
     this._name = null;
     this._cache = null;
     this._lifetime = null;
-    this._groups = null;
+    this._meta = null;
     this._total = null;
     this._select = null;
 
@@ -34,13 +34,8 @@ export default class ServerListModel {
     return this;
   }
 
-  groups(groups) {
-    this._groups = groups;
-    return this;
-  }
-
-  total(total) {
-    this._total = total;
+  meta(meta) {
+    this._meta = meta;
     return this;
   }
 
@@ -55,8 +50,7 @@ export default class ServerListModel {
       .name(this._name)
       .cache(this._cache, this._lifetime)
       .validate(this._validate)
-      .groups(this._groups)
-      .total(this._total)
+      .meta(this._meta)
       .select(this._select)
       .filter(params.filter)
       .order(params.order);

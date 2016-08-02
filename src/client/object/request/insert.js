@@ -43,22 +43,28 @@ export default class UpdateRequest extends Request {
   _handleData(data, response, callback) {
     response.removeAllListeners();
 
-    const error = response.statusCode === 201 ?
-      null : new ModelError(data, response.statusCode);
-
-    if (response.statusCode === 201) {
-      const id = response.headers.id;
-
-      this._object.id(id);
-      this._object.data(data);
-
-      this._object.model().object({
-        id,
-        object: this._object
-      }, 'insert');
+    if (response.statusCode !== 201) {
+      callback(new ModelError(data, response.statusCode));
+      return;
     }
 
-    callback(error, data, this._object);
+    const id = response.headers.id;
+
+    this._object
+      .id(id)
+      .data(data, (error) => {
+        if (error) {
+          callback(error);
+          return;
+        }
+
+        this._object.model().object({
+          id,
+          object: this._object
+        }, 'insert');
+
+        callback(null, data, this._object);
+      });
   }
 
   _handleError(error, response, callback) {

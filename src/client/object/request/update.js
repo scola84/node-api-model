@@ -4,16 +4,18 @@ import Request from '../request';
 
 export default class UpdateRequest extends Request {
   execute(data, callback = () => {}) {
-    const changed = Object.assign({}, this._object.data(), data);
-    const diff = odiff(this._object.data(), changed);
+    this._object.data((error, cacheData) => {
+      const newData = Object.assign({}, cacheData, data);
+      const diff = odiff(cacheData, newData);
 
-    if (diff.length === 0) {
-      callback();
-      return;
-    }
+      if (diff.length === 0) {
+        callback();
+        return;
+      }
 
-    this._validate(data, (error) => {
-      this._handleValidate(error, data, callback);
+      this._validate(newData, (validateError) => {
+        this._handleValidate(validateError, newData, callback);
+      });
     });
   }
 
@@ -29,7 +31,7 @@ export default class UpdateRequest extends Request {
   _request(data, callback) {
     const request = {
       method: 'PUT',
-      path: '/' + this._object.name() + '/' + this._object.id()
+      path: this._object.key()
     };
 
     this._object.connection()
@@ -52,14 +54,14 @@ export default class UpdateRequest extends Request {
   _handleData(data, response, callback) {
     response.removeAllListeners();
 
-    const error = response.statusCode === 200 ?
-      null : new ModelError(data, response.statusCode);
-
-    if (response.statusCode === 200) {
-      this._object.data(data);
+    if (response.statusCode !== 200) {
+      callback(new ModelError(data, response.statusCode));
+      return;
     }
 
-    callback(error, this._data, this._object);
+    this._object.data(data, (error) => {
+      callback(error, data, this._object);
+    });
   }
 
   _handleError(error, response, callback) {

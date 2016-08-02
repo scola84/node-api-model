@@ -12,6 +12,11 @@ export default class ClientObject extends EventEmitter {
     this._id = null;
     this._name = null;
     this._model = null;
+
+    this._cache = null;
+    this._lifetime = null;
+    this._interval = null;
+
     this._connection = null;
     this._validate = null;
 
@@ -21,13 +26,13 @@ export default class ClientObject extends EventEmitter {
     this._delete = null;
 
     this._subscribed = null;
-    this._data = null;
 
     this._handleOpen = () => this._open();
   }
 
-  destroy() {
+  destroy(cache) {
     this._unbindConnection();
+    clearInterval(this._interval);
 
     if (this._subscribed) {
       this.subscribe(false);
@@ -36,6 +41,10 @@ export default class ClientObject extends EventEmitter {
     this._model.object({
       id: this._id
     }, 'delete');
+
+    if (cache === true) {
+      this._cache.delete(this.key());
+    }
   }
 
   id(id) {
@@ -65,6 +74,24 @@ export default class ClientObject extends EventEmitter {
     return this;
   }
 
+  cache(cache) {
+    if (typeof cache === 'undefined') {
+      return this._cache;
+    }
+
+    this._cache = cache;
+    return this;
+  }
+
+  lifetime(lifetime) {
+    if (typeof lifetime === 'undefined') {
+      return this._lifetime;
+    }
+
+    this._lifetime = lifetime;
+    return this;
+  }
+
   connection(connection) {
     if (typeof connection === 'undefined') {
       return this._connection;
@@ -85,17 +112,29 @@ export default class ClientObject extends EventEmitter {
     return this;
   }
 
-  data(data) {
-    if (typeof data === 'undefined') {
-      return this._data;
-    }
-
-    this._data = data;
-    return this;
+  key() {
+    return '/' + this._name + '/' + this._id;
   }
 
-  get(name) {
-    return this._data && this._data[name];
+  data(data, callback = () => {}) {
+    if (typeof data === 'function') {
+      this._cache.get(this.key(), data);
+      return;
+    }
+
+    this._cache.set(this.key(), data, this._lifetime, (error) => {
+      if (error) {
+        callback(error);
+        return;
+      }
+
+      if (this._lifetime) {
+        this._interval = setInterval(this._keepalive.bind(this),
+          this._lifetime * 0.9);
+      }
+
+      callback(null, data);
+    });
   }
 
   subscribe(subscribed) {
@@ -103,7 +142,7 @@ export default class ClientObject extends EventEmitter {
 
     this._connection.request({
       method: 'SUB',
-      path: '/' + this._name + '/' + this._id
+      path: this.key()
     }).end(subscribed);
 
     return this;
@@ -147,17 +186,16 @@ export default class ClientObject extends EventEmitter {
     return this._delete;
   }
 
-  change(action, diff) {
+  change(action, diff, callback = () => {}) {
     if (action === 'update') {
-      this._data = applyDiff(Object.assign({}, this._data), diff);
+      this._changeUpdate(diff, callback);
     }
 
     if (action === 'delete') {
-      this._subscribed = false;
-      this.destroy();
+      this._changeDelete(callback);
     }
 
-    this.emit('change', action, diff, this._data);
+    return this;
   }
 
   _bindConnection() {
@@ -168,14 +206,46 @@ export default class ClientObject extends EventEmitter {
     this._connection.removeListener('open', this._handleOpen);
   }
 
+  _changeUpdate(diff, callback) {
+    this._cache.get(this.key(), (error, cacheData) => {
+      if (error) {
+        callback(error);
+        return;
+      }
+
+      cacheData = Object.assign({}, cacheData);
+      cacheData = applyDiff(cacheData, diff);
+
+      this._cache.set(this.key(), cacheData, this._lifetime, (cacheError) => {
+        if (cacheError) {
+          callback(cacheError);
+          return;
+        }
+
+        callback(null, cacheData);
+        this.emit('update', cacheData, diff);
+      });
+    });
+  }
+
+  _changeDelete(callback) {
+    this.emit('delete');
+
+    this._subscribed = false;
+    this.destroy(true);
+
+    callback();
+  }
+
   _open() {
     if (this._subscribed) {
       this.subscribe(true);
     }
 
-    if (this._data) {
-      this._data = null;
-      this.select().execute();
-    }
+    this.select().execute(null, true);
+  }
+
+  _keepalive() {
+    this._cache.touch(this.key(), this._lifetime);
   }
 }

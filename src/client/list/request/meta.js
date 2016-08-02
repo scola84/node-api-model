@@ -1,22 +1,29 @@
 import ModelError from '../../error';
 import Request from '../request';
 
-export default class GroupsRequest extends Request {
-  execute(callback = () => {}) {
-    if (this._list.meta('groups')) {
-      callback(null, this._list.meta('groups'), this._list);
-      return;
-    }
+export default class MetaRequest extends Request {
+  execute(callback = () => {}, force) {
+    this._list.data((error, cacheData) => {
+      if (error) {
+        callback(error);
+        return;
+      }
 
-    const filter = this._list.filter(true);
-    const order = this._list.order(true);
+      if (cacheData && force !== true) {
+        callback(null, cacheData, this._list);
+        return;
+      }
 
-    this._validate(filter, order, (filterError, orderError) => {
-      this._handleValidate(filterError, orderError, filter, order, callback);
+      const filter = this._list.filter(true);
+      const order = this._list.order(true);
+
+      this._validate(filter, order, (filterError, orderError) => {
+        this._handleValidate(filterError, orderError, callback);
+      });
     });
   }
 
-  _handleValidate(filterError, orderError, filter, order, callback) {
+  _handleValidate(filterError, orderError, callback) {
     if (filterError || orderError) {
       callback(filterError || orderError);
       return;
@@ -30,8 +37,7 @@ export default class GroupsRequest extends Request {
       path: '/' + this._list.name(),
       query: {
         filter: this._list.filter(),
-        order: this._list.order(),
-        meta: 'groups'
+        order: this._list.order()
       }
     };
 
@@ -55,14 +61,14 @@ export default class GroupsRequest extends Request {
   _handleData(data, response, callback) {
     response.removeAllListeners();
 
-    const error = response.statusCode === 200 ?
-      null : new ModelError(data, response.statusCode);
-
-    if (response.statusCode === 200) {
-      this._list.meta('groups', data);
+    if (response.statusCode !== 200) {
+      callback(new ModelError(data, response.statusCode));
+      return;
     }
 
-    callback(error, data, this._list);
+    this._list.data(data, (error) => {
+      callback(error, data, this._list);
+    });
   }
 
   _handleError(error, response, callback) {

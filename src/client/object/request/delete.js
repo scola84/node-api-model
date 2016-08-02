@@ -9,7 +9,7 @@ export default class SelectRequest extends Request {
   _request(callback) {
     const request = {
       method: 'DELETE',
-      path: '/' + this._object.name() + '/' + this._object.id()
+      path: this._object.key()
     };
 
     this._object.connection()
@@ -32,10 +32,12 @@ export default class SelectRequest extends Request {
   _handleData(data, response, callback) {
     response.removeAllListeners();
 
-    const error = response.statusCode === 200 ?
-      null : new ModelError(data, response.statusCode);
+    if (response.statusCode !== 200) {
+      callback(new ModelError(data, response.statusCode));
+      return;
+    }
 
-    callback(error, this._object.data(), this._object);
+    callback(null, null, this._object);
   }
 
   _handleError(error, response, callback) {
