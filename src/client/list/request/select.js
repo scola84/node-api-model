@@ -1,7 +1,7 @@
 import ModelError from '../../error';
 import Request from '../request';
 
-export default class TotalRequest extends Request {
+export default class SelectRequest extends Request {
   constructor() {
     super();
     this._page = null;

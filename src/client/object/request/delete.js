@@ -1,7 +1,7 @@
 import ModelError from '../../error';
 import Request from '../request';
 
-export default class SelectRequest extends Request {
+export default class DeleteRequest extends Request {
   execute(callback = () => {}) {
     this._request(callback);
   }

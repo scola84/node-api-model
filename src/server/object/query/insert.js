@@ -1,6 +1,6 @@
 import Query from '../query';
 
-export default class UpdateQuery extends Query {
+export default class InsertQuery extends Query {
   execute(request, callback = () => {}) {
     request.once('data', (data) => {
       this._handleData(data, request, callback);

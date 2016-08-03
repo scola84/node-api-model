@@ -1,5 +1,9 @@
-function end(field, value, fields) {
+function end(field, value, fields, enclosed) {
   if (value) {
+    if (!isNaN(value) && !enclosed) {
+      value = Number(value);
+    }
+
     fields[field] = fields[field] || [];
     fields[field].push(value);
   }
@@ -12,15 +16,16 @@ export default function parseFilter(filter, translate) {
   let field = '';
   let value = '';
   let enclosed = false;
+  let i = 0;
 
-  for (let i = 0; i < filter.length; i += 1) {
+  for (; i < filter.length; i += 1) {
     if (filter[i] === '"') {
       enclosed = !enclosed;
     } else if (filter[i] === ' ') {
       if (enclosed === true) {
         value += filter[i];
       } else if (enclosed === false) {
-        fields = end(field, value, fields);
+        fields = end(field, value, fields, filter[i - 1] === '"');
         value = '';
         field = '';
       }
@@ -32,5 +37,5 @@ export default function parseFilter(filter, translate) {
     }
   }
 
-  return end(field, value, fields);
+  return end(field, value, fields, filter[i - 1] === '"');
 }
