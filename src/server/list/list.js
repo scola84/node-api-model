@@ -11,8 +11,6 @@ export default class ServerList {
     this._name = null;
 
     this._cache = null;
-    this._lifetime = null;
-    this._interval = null;
 
     this._validate = null;
     this._meta = null;
@@ -39,8 +37,6 @@ export default class ServerList {
 
     this._connections.clear();
     this._pages.clear();
-
-    clearInterval(this._interval);
   }
 
   id(id) {
@@ -61,14 +57,12 @@ export default class ServerList {
     return this;
   }
 
-  cache(cache, lifetime) {
+  cache(cache) {
     if (typeof cache === 'undefined') {
       return this._cache;
     }
 
     this._cache = cache;
-    this._lifetime = lifetime;
-
     return this;
   }
 
@@ -135,15 +129,10 @@ export default class ServerList {
       return;
     }
 
-    this._cache.set(this.key(), data, this._lifetime, (error) => {
+    this._cache.set(this.key(), data, (error) => {
       if (error) {
         callback(error);
         return;
-      }
-
-      if (this._lifetime) {
-        this._interval = setInterval(this._keepalive.bind(this),
-          this._lifetime * 0.9);
       }
 
       callback(null, data);
@@ -185,7 +174,7 @@ export default class ServerList {
       this._pages.set(index, new ServerPage()
         .index(index)
         .list(this)
-        .cache(this._cache, this._lifetime)
+        .cache(this._cache)
         .validate(this._validate)
         .select(this._select));
     }
@@ -290,9 +279,5 @@ export default class ServerList {
 
       callback();
     });
-  }
-
-  _keepalive() {
-    this._cache.touch(this.key(), this._lifetime);
   }
 }

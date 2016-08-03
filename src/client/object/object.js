@@ -14,12 +14,9 @@ export default class ClientObject extends EventEmitter {
     this._model = null;
 
     this._cache = null;
-    this._lifetime = null;
-    this._interval = null;
-
     this._connection = null;
-    this._validate = null;
 
+    this._validate = null;
     this._select = null;
     this._insert = null;
     this._update = null;
@@ -32,7 +29,6 @@ export default class ClientObject extends EventEmitter {
 
   destroy(cache) {
     this._unbindConnection();
-    clearInterval(this._interval);
 
     if (this._subscribed) {
       this.subscribe(false);
@@ -83,15 +79,6 @@ export default class ClientObject extends EventEmitter {
     return this;
   }
 
-  lifetime(lifetime) {
-    if (typeof lifetime === 'undefined') {
-      return this._lifetime;
-    }
-
-    this._lifetime = lifetime;
-    return this;
-  }
-
   connection(connection) {
     if (typeof connection === 'undefined') {
       return this._connection;
@@ -122,15 +109,10 @@ export default class ClientObject extends EventEmitter {
       return;
     }
 
-    this._cache.set(this.key(), data, this._lifetime, (error) => {
+    this._cache.set(this.key(), data, (error) => {
       if (error) {
         callback(error);
         return;
-      }
-
-      if (this._lifetime) {
-        this._interval = setInterval(this._keepalive.bind(this),
-          this._lifetime * 0.9);
       }
 
       callback(null, data);
@@ -216,7 +198,7 @@ export default class ClientObject extends EventEmitter {
       cacheData = Object.assign({}, cacheData);
       cacheData = applyDiff(cacheData, diff);
 
-      this._cache.set(this.key(), cacheData, this._lifetime, (cacheError) => {
+      this._cache.set(this.key(), cacheData, (cacheError) => {
         if (cacheError) {
           callback(cacheError);
           return;
@@ -250,9 +232,5 @@ export default class ClientObject extends EventEmitter {
         this.subscribe(true);
       }
     }, true);
-  }
-
-  _keepalive() {
-    this._cache.touch(this.key(), this._lifetime);
   }
 }

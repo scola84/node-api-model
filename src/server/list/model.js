@@ -4,7 +4,6 @@ export default class ServerListModel {
   constructor() {
     this._name = null;
     this._cache = null;
-    this._lifetime = null;
     this._meta = null;
     this._total = null;
     this._select = null;
@@ -18,9 +17,8 @@ export default class ServerListModel {
     return this;
   }
 
-  cache(cache, lifetime) {
+  cache(cache) {
     this._cache = cache;
-    this._lifetime = lifetime;
     return this;
   }
 
@@ -48,7 +46,7 @@ export default class ServerListModel {
     return new ServerList()
       .id(id)
       .name(this._name)
-      .cache(this._cache, this._lifetime)
+      .cache(this._cache)
       .validate(this._validate)
       .meta(this._meta)
       .select(this._select)

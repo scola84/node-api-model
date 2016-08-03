@@ -15,10 +15,8 @@ export default class ClientList extends EventEmitter {
     this._model = null;
 
     this._cache = null;
-    this._lifetime = null;
-    this._interval = null;
-
     this._connection = null;
+
     this._validate = null;
     this._meta = null;
     this._select = null;
@@ -42,7 +40,6 @@ export default class ClientList extends EventEmitter {
     });
 
     this._pages.clear();
-    clearInterval(this._interval);
 
     if (cache === true) {
       this._cache.delete(this.key());
@@ -86,15 +83,6 @@ export default class ClientList extends EventEmitter {
     }
 
     this._cache = cache;
-    return this;
-  }
-
-  lifetime(lifetime) {
-    if (typeof lifetime === 'undefined') {
-      return this._lifetime;
-    }
-
-    this._lifetime = lifetime;
     return this;
   }
 
@@ -163,15 +151,10 @@ export default class ClientList extends EventEmitter {
       return;
     }
 
-    this._cache.set(this.key(), data, this._lifetime, (error) => {
+    this._cache.set(this.key(), data, (error) => {
       if (error) {
         callback(error);
         return;
-      }
-
-      if (this._lifetime) {
-        this._interval = setInterval(this._keepalive.bind(this),
-          this._lifetime * 0.9);
       }
 
       callback(null, data);
@@ -216,7 +199,6 @@ export default class ClientList extends EventEmitter {
         .index(index)
         .list(this)
         .cache(this._cache)
-        .lifetime(this._lifetime)
         .validate(this._validate));
     }
 
@@ -273,7 +255,7 @@ export default class ClientList extends EventEmitter {
       cacheData = Object.assign({}, cacheData);
       cacheData = applyDiff(cacheData, diff.meta);
 
-      this._cache.set(this.key(), cacheData, this._lifetime, (cacheError) => {
+      this._cache.set(this.key(), cacheData, (cacheError) => {
         if (cacheError) {
           callback(cacheError);
           return;
@@ -285,9 +267,5 @@ export default class ClientList extends EventEmitter {
         callback(null, diff, cacheData);
       });
     });
-  }
-
-  _keepalive() {
-    this._cache.touch(this.key(), this._lifetime);
   }
 }

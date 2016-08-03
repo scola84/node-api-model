@@ -6,7 +6,6 @@ export default class ServerModel {
   constructor() {
     this._name = null;
     this._cache = null;
-    this._lifetime = null;
     this._connection = null;
 
     this._lists = new Map();
@@ -18,10 +17,8 @@ export default class ServerModel {
     return this;
   }
 
-  cache(cache, lifetime) {
+  cache(cache) {
     this._cache = cache;
-    this._lifetime = lifetime;
-
     return this;
   }
 
@@ -45,7 +42,7 @@ export default class ServerModel {
     if (typeof params === 'undefined') {
       this._list = new ServerListModel()
         .name(this._name)
-        .cache(this._cache, this._lifetime);
+        .cache(this._cache);
       return this._list;
     }
 
@@ -72,7 +69,7 @@ export default class ServerModel {
       this._object = new ServerObjectModel()
         .name(this._name)
         .model(this)
-        .cache(this._cache, this._lifetime)
+        .cache(this._cache)
         .connection(this._connection);
 
       return this._object;

@@ -7,8 +7,6 @@ export default class ClientPage {
     this._list = null;
 
     this._cache = null;
-    this._lifetime = null;
-    this._interval = null;
 
     this._validate = null;
     this._select = null;
@@ -19,7 +17,6 @@ export default class ClientPage {
   destroy(cache) {
     this._unbindConnection();
 
-    clearInterval(this._interval);
     this._list.page(this._index, false);
 
     if (cache === true) {
@@ -56,15 +53,6 @@ export default class ClientPage {
     return this;
   }
 
-  lifetime(lifetime) {
-    if (typeof lifetime === 'undefined') {
-      return this._lifetime;
-    }
-
-    this._lifetime = lifetime;
-    return this;
-  }
-
   validate(validate) {
     if (typeof validate === 'undefined') {
       return this._validate;
@@ -84,15 +72,10 @@ export default class ClientPage {
       return;
     }
 
-    this._cache.set(this.key(), data, this._lifetime, (error) => {
+    this._cache.set(this.key(), data, (error) => {
       if (error) {
         callback(error);
         return;
-      }
-
-      if (this._lifetime) {
-        this._interval = setInterval(this._keepalive.bind(this),
-          this._lifetime * 0.9);
       }
 
       callback();
@@ -137,9 +120,5 @@ export default class ClientPage {
 
   _open() {
     this.select().execute(() => {}, true);
-  }
-
-  _keepalive() {
-    this._cache.touch(this.key(), this._lifetime);
   }
 }

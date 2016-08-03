@@ -5,17 +5,13 @@ export default class ServerPage {
   constructor() {
     this._index = null;
     this._list = null;
-
     this._cache = null;
-    this._lifetime = null;
-    this._interval = null;
 
     this._validate = null;
     this._select = null;
   }
 
   destroy(cache) {
-    clearInterval(this._interval);
     this._list.page(this._index, false);
 
     if (cache === true) {
@@ -41,14 +37,12 @@ export default class ServerPage {
     return this;
   }
 
-  cache(cache, lifetime) {
+  cache(cache) {
     if (typeof cache === 'undefined') {
       return this._cache;
     }
 
     this._cache = cache;
-    this._lifetime = lifetime;
-
     return this;
   }
 
@@ -71,15 +65,10 @@ export default class ServerPage {
       return;
     }
 
-    this._cache.set(this.key(), data, this._lifetime, (error) => {
+    this._cache.set(this.key(), data, (error) => {
       if (error) {
         callback(error);
         return;
-      }
-
-      if (this._lifetime) {
-        this._interval = setInterval(this._keepalive.bind(this),
-          this._lifetime * 0.9);
       }
 
       callback();
@@ -116,9 +105,5 @@ export default class ServerPage {
         callback(null, odiff(cacheData, data), data);
       }, true);
     });
-  }
-
-  _keepalive() {
-    this._cache.touch(this.key(), this._lifetime);
   }
 }

@@ -5,7 +5,6 @@ export default class ServerObjectModel {
     this._name = null;
     this._model = null;
     this._cache = null;
-    this._lifetime = null;
     this._connection = null;
 
     this._authorize = (r, c) => c();
@@ -27,10 +26,8 @@ export default class ServerObjectModel {
     return this;
   }
 
-  cache(cache, lifetime) {
+  cache(cache) {
     this._cache = cache;
-    this._lifetime = lifetime;
-
     return this;
   }
 
@@ -74,7 +71,7 @@ export default class ServerObjectModel {
       .id(id)
       .name(this._name)
       .model(this._model)
-      .cache(this._cache, this._lifetime)
+      .cache(this._cache)
       .connection(this._connection)
       .authorize(this._authorize)
       .validate(this._validate)

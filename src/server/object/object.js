@@ -11,9 +11,6 @@ export default class ServerObject {
     this._model = null;
 
     this._cache = null;
-    this._lifetime = null;
-    this._interval = null;
-
     this._connection = null;
 
     this._authorize = null;
@@ -34,7 +31,6 @@ export default class ServerObject {
     });
 
     this._connections.clear();
-    clearInterval(this._interval);
 
     this._model.object({
       id: this._id
@@ -72,14 +68,12 @@ export default class ServerObject {
     return this;
   }
 
-  cache(cache, lifetime) {
+  cache(cache) {
     if (typeof cache === 'undefined') {
       return this._cache;
     }
 
     this._cache = cache;
-    this._lifetime = lifetime;
-
     return this;
   }
 
@@ -120,15 +114,10 @@ export default class ServerObject {
       return;
     }
 
-    this._cache.set(this.key(), data, this._lifetime, (error) => {
+    this._cache.set(this.key(), data, (error) => {
       if (error) {
         callback(error);
         return;
-      }
-
-      if (this._lifetime) {
-        this._interval = setInterval(this._keepalive.bind(this),
-          this._lifetime * 0.9);
       }
 
       callback(null, data);
@@ -277,7 +266,7 @@ export default class ServerObject {
       cacheData = Object.assign({}, cacheData);
       cacheData = applyDiff(cacheData, diff);
 
-      this._cache.set(this.key(), cacheData, this._lifetime, (cacheError) => {
+      this._cache.set(this.key(), cacheData, (cacheError) => {
         if (cacheError) {
           callback(cacheError);
           return;
@@ -293,9 +282,5 @@ export default class ServerObject {
     this.notifyClients('delete');
     this.destroy(true);
     callback();
-  }
-
-  _keepalive() {
-    this._cache.touch(this.key(), this._lifetime);
   }
 }
