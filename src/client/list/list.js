@@ -185,8 +185,8 @@ export default class ClientList extends EventEmitter {
       method: 'SUB',
       path: '/' + this._name,
       query: {
-        filter: this._filter,
-        order: this._order
+        filter: this.filter(),
+        order: this.order()
       }
     }).end(subscribed);
 

@@ -76,28 +76,32 @@ export default class ServerList {
   }
 
   filter(filter) {
-    if (filter === true) {
-      return parseFilter(this._filter);
+    if (typeof filter === 'undefined') {
+      return this._rawFilter;
     }
 
-    if (typeof filter === 'undefined') {
+    if (filter === true) {
       return this._filter;
     }
 
-    this._filter = filter;
+    this._rawFilter = filter;
+    this._filter = parseFilter(filter);
+
     return this;
   }
 
   order(order) {
-    if (order === true) {
-      return parseOrder(this._order);
+    if (typeof order === 'undefined') {
+      return this._rawOrder;
     }
 
-    if (typeof order === 'undefined') {
+    if (order === true) {
       return this._order;
     }
 
-    this._order = order;
+    this._rawOrder = order;
+    this._order = parseOrder(order);
+
     return this;
   }
 
