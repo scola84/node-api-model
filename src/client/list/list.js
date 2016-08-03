@@ -3,6 +3,7 @@ import eachOf from 'async/eachOf';
 import MetaRequest from './request/meta';
 import ClientPage from './page';
 import applyDiff from '../../helper/apply-diff';
+import formatFilter from '../../helper/format-filter';
 import parseFilter from '../../helper/parse-filter';
 import parseOrder from '../../helper/parse-order';
 
@@ -17,6 +18,7 @@ export default class ClientList extends EventEmitter {
     this._cache = null;
     this._connection = null;
 
+    this._translate = null;
     this._validate = null;
     this._meta = null;
     this._select = null;
@@ -97,6 +99,15 @@ export default class ClientList extends EventEmitter {
     return this;
   }
 
+  translate(translate) {
+    if (typeof translate === 'undefined') {
+      return this._translate;
+    }
+
+    this._translate = translate;
+    return this;
+  }
+
   validate(validate) {
     if (typeof validate === 'undefined') {
       return this._validate;
@@ -107,28 +118,34 @@ export default class ClientList extends EventEmitter {
   }
 
   filter(filter) {
-    if (filter === true) {
-      return parseFilter(this._filter);
+    if (typeof filter === 'undefined') {
+      return this._rawFilter;
     }
 
-    if (typeof filter === 'undefined') {
+    if (filter === true) {
       return this._filter;
     }
 
+    filter = parseFilter(filter, this._translate);
+
+    this._rawFilter = formatFilter(filter);
     this._filter = filter;
+
     return this;
   }
 
   order(order) {
-    if (order === true) {
-      return parseOrder(this._order);
+    if (typeof order === 'undefined') {
+      return this._rawOrder;
     }
 
-    if (typeof order === 'undefined') {
+    if (order === true) {
       return this._order;
     }
 
-    this._order = order;
+    this._rawOrder = order;
+    this._order = parseOrder(order);
+
     return this;
   }
 

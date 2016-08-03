@@ -7,7 +7,7 @@ function end(field, value, fields) {
   return fields;
 }
 
-export default function parseFilter(filter) {
+export default function parseFilter(filter, translate) {
   let fields = {};
   let field = '';
   let value = '';
@@ -25,7 +25,7 @@ export default function parseFilter(filter) {
         field = '';
       }
     } else if (filter[i] === ':') {
-      field = value;
+      field = translate ? translate(value) : value;
       value = '';
     } else {
       value += filter[i];
