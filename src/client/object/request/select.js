@@ -20,7 +20,7 @@ export default class SelectRequest extends Request {
 
   _request(callback) {
     const request = {
-      path: this._object.key()
+      path: this._object.path()
     };
 
     this._object.connection()

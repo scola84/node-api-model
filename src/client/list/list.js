@@ -42,7 +42,7 @@ export default class ClientList extends EventEmitter {
     this._pages.clear();
 
     if (cache === true) {
-      this._cache.delete(this.key());
+      this._cache.delete(this.path());
     }
 
     if (this._subscribed) {
@@ -141,17 +141,17 @@ export default class ClientList extends EventEmitter {
     return this;
   }
 
-  key() {
+  path() {
     return '/' + this._name + '/' + this._id;
   }
 
   data(data, callback = () => {}) {
     if (typeof data === 'function') {
-      this._cache.get(this.key(), data);
+      this._cache.get(this.path(), data);
       return;
     }
 
-    this._cache.set(this.key(), data, (error) => {
+    this._cache.set(this.path(), data, (error) => {
       if (error) {
         callback(error);
         return;
@@ -246,7 +246,7 @@ export default class ClientList extends EventEmitter {
   }
 
   _changeMeta(action, diff, callback) {
-    this._cache.get(this.key(), (error, cacheData) => {
+    this._cache.get(this.path(), (error, cacheData) => {
       if (error) {
         callback(error);
         return;
@@ -255,7 +255,7 @@ export default class ClientList extends EventEmitter {
       cacheData = Object.assign({}, cacheData);
       cacheData = applyDiff(cacheData, diff.meta);
 
-      this._cache.set(this.key(), cacheData, (cacheError) => {
+      this._cache.set(this.path(), cacheData, (cacheError) => {
         if (cacheError) {
           callback(cacheError);
           return;

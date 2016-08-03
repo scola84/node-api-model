@@ -31,7 +31,7 @@ export default class UpdateRequest extends Request {
   _request(data, callback) {
     const request = {
       method: 'PUT',
-      path: this._object.key()
+      path: this._object.path()
     };
 
     this._object.connection()

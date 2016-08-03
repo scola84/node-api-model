@@ -119,17 +119,17 @@ export default class ServerList {
     return this;
   }
 
-  key() {
+  path() {
     return '/' + this._name + '/' + this._id;
   }
 
   data(data, callback = () => {}) {
     if (typeof data === 'function') {
-      this._cache.get(this.key(), data);
+      this._cache.get(this.path(), data);
       return;
     }
 
-    this._cache.set(this.key(), data, (error) => {
+    this._cache.set(this.path(), data, (error) => {
       if (error) {
         callback(error);
         return;

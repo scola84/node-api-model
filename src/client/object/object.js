@@ -39,7 +39,7 @@ export default class ClientObject extends EventEmitter {
     }, 'delete');
 
     if (cache === true) {
-      this._cache.delete(this.key());
+      this._cache.delete(this.path());
     }
   }
 
@@ -99,17 +99,17 @@ export default class ClientObject extends EventEmitter {
     return this;
   }
 
-  key() {
+  path() {
     return '/' + this._name + '/' + this._id;
   }
 
   data(data, callback = () => {}) {
     if (typeof data === 'function') {
-      this._cache.get(this.key(), data);
+      this._cache.get(this.path(), data);
       return;
     }
 
-    this._cache.set(this.key(), data, (error) => {
+    this._cache.set(this.path(), data, (error) => {
       if (error) {
         callback(error);
         return;
@@ -124,7 +124,7 @@ export default class ClientObject extends EventEmitter {
 
     this._connection.request({
       method: 'SUB',
-      path: this.key()
+      path: this.path()
     }).end(subscribed);
 
     return this;
@@ -189,7 +189,7 @@ export default class ClientObject extends EventEmitter {
   }
 
   _changeUpdate(diff, callback) {
-    this._cache.get(this.key(), (error, cacheData) => {
+    this._cache.get(this.path(), (error, cacheData) => {
       if (error) {
         callback(error);
         return;
@@ -198,7 +198,7 @@ export default class ClientObject extends EventEmitter {
       cacheData = Object.assign({}, cacheData);
       cacheData = applyDiff(cacheData, diff);
 
-      this._cache.set(this.key(), cacheData, (cacheError) => {
+      this._cache.set(this.path(), cacheData, (cacheError) => {
         if (cacheError) {
           callback(cacheError);
           return;

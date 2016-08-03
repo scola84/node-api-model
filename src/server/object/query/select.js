@@ -26,7 +26,7 @@ export default class SelectQuery extends Query {
     }
 
     if (!data) {
-      callback(new Error('404 not_found ' + this._object.key()));
+      callback(new Error('404 not_found ' + this._object.path()));
       return;
     }
 

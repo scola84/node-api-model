@@ -37,7 +37,7 @@ export default class ServerObject {
     }, 'delete');
 
     if (cache === true) {
-      this._cache.delete(this.key());
+      this._cache.delete(this.path());
     }
   }
 
@@ -104,17 +104,17 @@ export default class ServerObject {
     return this;
   }
 
-  key() {
+  path() {
     return '/' + this._name + '/' + this._id;
   }
 
   data(data, callback = () => {}) {
     if (typeof data === 'function') {
-      this._cache.get(this.key(), data);
+      this._cache.get(this.path(), data);
       return;
     }
 
-    this._cache.set(this.key(), data, (error) => {
+    this._cache.set(this.path(), data, (error) => {
       if (error) {
         callback(error);
         return;
@@ -208,7 +208,7 @@ export default class ServerObject {
     this._connections.forEach((connection) => {
       connection.request({
         method: 'PUB',
-        path: this.key()
+        path: this.path()
       }).end({
         action,
         diff
@@ -225,7 +225,7 @@ export default class ServerObject {
 
     this._connection.request({
       method: 'PUB',
-      path: this.key()
+      path: this.path()
     }).end({
       action,
       diff
@@ -257,7 +257,7 @@ export default class ServerObject {
   }
 
   _changeUpdate(diff, callback) {
-    this._cache.get(this.key(), (error, cacheData) => {
+    this._cache.get(this.path(), (error, cacheData) => {
       if (error) {
         callback(error);
         return;
@@ -266,7 +266,7 @@ export default class ServerObject {
       cacheData = Object.assign({}, cacheData);
       cacheData = applyDiff(cacheData, diff);
 
-      this._cache.set(this.key(), cacheData, (cacheError) => {
+      this._cache.set(this.path(), cacheData, (cacheError) => {
         if (cacheError) {
           callback(cacheError);
           return;
