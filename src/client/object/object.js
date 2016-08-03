@@ -192,7 +192,7 @@ export default class ClientObject extends EventEmitter {
     }
 
     if (action === 'delete') {
-      this._changeDelete(callback);
+      this._changeDelete(diff, callback);
     }
 
     return this;
@@ -222,19 +222,22 @@ export default class ClientObject extends EventEmitter {
           return;
         }
 
-        callback(null, cacheData);
-        this.emit('update', cacheData, diff);
+        this.emit('update', diff, cacheData);
+        this.emit('change', 'update', diff, cacheData);
+
+        callback(null, diff, cacheData);
       });
     });
   }
 
-  _changeDelete(callback) {
-    this.emit('delete');
+  _changeDelete(diff, callback) {
+    this.emit('delete', diff);
+    this.emit('change', 'delete', diff);
 
     this._subscribed = false;
     this.destroy(true);
 
-    callback();
+    callback(null, diff);
   }
 
   _open() {

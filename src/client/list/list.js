@@ -230,6 +230,8 @@ export default class ClientList extends EventEmitter {
     eachOf(pages, (page, index, eachCallback) => {
       if (diff.pages[indices[index]]) {
         page.change(action, diff.pages[indices[index]], eachCallback);
+      } else {
+        eachCallback();
       }
     }, (error) => {
       if (error) {
@@ -273,8 +275,10 @@ export default class ClientList extends EventEmitter {
           return;
         }
 
-        callback(null, diff);
-        this.emit(action, diff);
+        this.emit(action, diff, cacheData);
+        this.emit('change', action, diff, cacheData);
+
+        callback(null, diff, cacheData);
       });
     });
   }

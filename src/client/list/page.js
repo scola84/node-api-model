@@ -99,10 +99,6 @@ export default class ClientPage {
     });
   }
 
-  // get(index) {
-  //   return this._data && this._data[index];
-  // }
-
   select() {
     if (!this._select) {
       this._select = new SelectRequest()
