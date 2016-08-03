@@ -252,11 +252,15 @@ export default class ClientList extends EventEmitter {
   }
 
   _open() {
-    if (this._subscribed) {
-      this.subscribe(true);
-    }
+    this.meta().execute((error) => {
+      if (error) {
+        return;
+      }
 
-    this.meta().execute(null, true);
+      if (this._subscribed) {
+        this.subscribe(true);
+      }
+    }, true);
   }
 
   _changeMeta(action, diff, callback) {

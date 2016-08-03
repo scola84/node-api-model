@@ -241,11 +241,15 @@ export default class ClientObject extends EventEmitter {
   }
 
   _open() {
-    if (this._subscribed) {
-      this.subscribe(true);
-    }
+    this.select().execute((error) => {
+      if (error) {
+        return;
+      }
 
-    this.select().execute(null, true);
+      if (this._subscribed) {
+        this.subscribe(true);
+      }
+    }, true);
   }
 
   _keepalive() {

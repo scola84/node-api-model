@@ -11,7 +11,7 @@ export default class MetaQuery extends Query {
     return this;
   }
 
-  execute(callback = () => {}, force) {
+  execute(callback, force) {
     this._list.data((error, data) => {
       if (error) {
         callback(error);

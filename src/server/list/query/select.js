@@ -15,7 +15,7 @@ export default class SelectQuery extends Query {
     return this;
   }
 
-  execute(callback = () => {}, force) {
+  execute(callback, force) {
     this._page.data((error, data) => {
       if (error) {
         callback(error);

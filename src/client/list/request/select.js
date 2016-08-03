@@ -16,7 +16,7 @@ export default class TotalRequest extends Request {
     return this;
   }
 
-  execute(callback = () => {}, force) {
+  execute(callback, force) {
     this._page.data((error, cacheData) => {
       if (error) {
         callback(error);

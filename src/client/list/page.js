@@ -136,11 +136,7 @@ export default class ClientPage {
   }
 
   _open() {
-    this._cache.get(this.key(), (error, data) => {
-      if (data) {
-        this.select().execute(null, true);
-      }
-    });
+    this.select().execute(() => {}, true);
   }
 
   _keepalive() {

@@ -2,7 +2,7 @@ import ModelError from '../../error';
 import Request from '../request';
 
 export default class MetaRequest extends Request {
-  execute(callback = () => {}, force) {
+  execute(callback, force) {
     this._list.data((error, cacheData) => {
       if (error) {
         callback(error);

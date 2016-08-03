@@ -1,7 +1,7 @@
 import Query from '../query';
 
 export default class SelectQuery extends Query {
-  execute(request, callback = () => {}) {
+  execute(request, callback) {
     this._object.data((error, cacheData) => {
       if (error) {
         callback(error);
