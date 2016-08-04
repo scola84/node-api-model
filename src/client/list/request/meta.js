@@ -1,4 +1,3 @@
-import ModelError from '../../error';
 import Request from '../request';
 
 export default class MetaRequest extends Request {
@@ -33,22 +32,26 @@ export default class MetaRequest extends Request {
   }
 
   _request(callback) {
-    const request = {
-      path: '/' + this._list.name(),
-      query: {
-        filter: this._list.filter(),
-        order: this._list.order()
-      }
-    };
+    const request = this._list.connection().request({
+        path: this._list.path(),
+        query: {
+          filter: this._list.filter(),
+          order: this._list.order()
+        }
+      }, (response) => {
+        this._handleResponse(request, response, callback);
+      });
 
-    this._list.connection()
-      .request(request, (response) => {
-        this._handleResponse(response, callback);
-      })
-      .end();
+    request.once('error', (error) => {
+      this._handleError(error, request, callback);
+    });
+
+    request.end();
   }
 
-  _handleResponse(response, callback) {
+  _handleResponse(request, response, callback) {
+    request.removeAllListeners();
+
     response.once('data', (data) => {
       this._handleData(data, response, callback);
     });
@@ -62,7 +65,7 @@ export default class MetaRequest extends Request {
     response.removeAllListeners();
 
     if (response.statusCode !== 200) {
-      callback(new ModelError(data, response.statusCode));
+      callback(new Error(data));
       return;
     }
 
@@ -71,8 +74,8 @@ export default class MetaRequest extends Request {
     });
   }
 
-  _handleError(error, response, callback) {
-    response.removeAllListeners();
+  _handleError(error, source, callback) {
+    source.removeAllListeners();
     callback(error);
   }
 }

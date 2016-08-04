@@ -28,10 +28,15 @@ export default class ServerModel {
   }
 
   subscribe(action) {
-    this._connection.request({
+    const request = this._connection.request({
       method: 'SUB',
       path: '/' + this._name
-    }).end(action);
+    });
+
+    request.once('error', () => {});
+    request.end(action);
+
+    return this;
   }
 
   lists() {

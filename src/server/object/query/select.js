@@ -21,12 +21,12 @@ export default class SelectQuery extends Query {
 
   _handleQuery(error, data, callback) {
     if (error) {
-      callback(new Error('500 query_failed ' + error.message));
+      callback(new Error('500 invalid_query ' + error.message));
       return;
     }
 
     if (!data) {
-      callback(new Error('404 not_found ' + this._object.path()));
+      callback(new Error('404 invalid_object ' + this._object.path()));
       return;
     }
 

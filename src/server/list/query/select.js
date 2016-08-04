@@ -38,7 +38,7 @@ export default class SelectQuery extends Query {
 
   _handleValidate(filterError, orderError, filter, order, callback) {
     if (filterError || orderError) {
-      callback(new Error('400 input_invalid ' +
+      callback(new Error('400 invalid_input ' +
         (filterError || orderError).message));
       return;
     }
@@ -55,7 +55,7 @@ export default class SelectQuery extends Query {
 
   _handleQuery(error, data, callback) {
     if (error) {
-      callback(new Error('500 query_failed ' + error.message));
+      callback(new Error('500 invalid_query ' + error.message));
       return;
     }
 

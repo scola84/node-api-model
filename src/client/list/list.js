@@ -44,7 +44,7 @@ export default class ClientList extends EventEmitter {
     this._pages.clear();
 
     if (cache === true) {
-      this._cache.delete(this.path());
+      this._cache.delete(this.key());
     }
 
     if (this._subscribed) {
@@ -159,16 +159,20 @@ export default class ClientList extends EventEmitter {
   }
 
   path() {
-    return '/' + this._name + '/' + this._id;
+    return '/' + this._name;
+  }
+
+  key() {
+    return this.path() + '/' + this._id;
   }
 
   data(data, callback = () => {}) {
     if (typeof data === 'function') {
-      this._cache.get(this.path(), data);
+      this._cache.get(this.key(), data);
       return;
     }
 
-    this._cache.set(this.path(), data, (error) => {
+    this._cache.set(this.key(), data, (error) => {
       if (error) {
         callback(error);
         return;
@@ -181,14 +185,17 @@ export default class ClientList extends EventEmitter {
   subscribe(subscribed) {
     this._subscribed = subscribed;
 
-    this._connection.request({
+    const request = this._connection.request({
       method: 'SUB',
-      path: '/' + this._name,
+      path: this.path(),
       query: {
         filter: this.filter(),
         order: this.order()
       }
-    }).end(subscribed);
+    });
+
+    request.once('error', () => {});
+    request.end(subscribed);
 
     return this;
   }
@@ -263,7 +270,7 @@ export default class ClientList extends EventEmitter {
   }
 
   _changeMeta(action, diff, callback) {
-    this._cache.get(this.path(), (error, cacheData) => {
+    this._cache.get(this.key(), (error, cacheData) => {
       if (error) {
         callback(error);
         return;
@@ -272,7 +279,7 @@ export default class ClientList extends EventEmitter {
       cacheData = Object.assign({}, cacheData);
       cacheData = applyDiff(cacheData, diff.meta);
 
-      this._cache.set(this.path(), cacheData, (cacheError) => {
+      this._cache.set(this.key(), cacheData, (cacheError) => {
         if (cacheError) {
           callback(cacheError);
           return;

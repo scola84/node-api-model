@@ -13,7 +13,7 @@ export default class InsertQuery extends Query {
 
   _handleError(error, request, callback) {
     request.removeAllListeners();
-    callback(new Error('500 request_failed ' + error.message));
+    callback(new Error('400 invalid_request ' + error.message));
   }
 
   _handleData(data, request, callback) {
@@ -26,7 +26,7 @@ export default class InsertQuery extends Query {
 
   _handleValidate(error, data, request, callback) {
     if (error) {
-      callback(new Error('400 input_invalid ' + error.message));
+      callback(new Error('400 invalid_input ' + error.message));
       return;
     }
 
@@ -37,7 +37,7 @@ export default class InsertQuery extends Query {
 
   _handleQuery(error, id, data, callback) {
     if (error) {
-      callback(new Error('500 query_failed ' + error.message));
+      callback(new Error('500 invalid_query ' + error.message));
       return;
     }
 

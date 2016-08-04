@@ -20,7 +20,7 @@ export default class ClientPage {
     this._list.page(this._index, false);
 
     if (cache === true) {
-      this._cache.delete(this.path());
+      this._cache.delete(this.key());
     }
   }
 
@@ -62,17 +62,17 @@ export default class ClientPage {
     return this;
   }
 
-  path() {
-    return this._list.path() + '/' + this._index;
+  key() {
+    return this._list.key() + '/' + this._index;
   }
 
   data(data, callback = () => {}) {
     if (typeof data === 'function') {
-      this._cache.get(this.path(), data);
+      this._cache.get(this.key(), data);
       return;
     }
 
-    this._cache.set(this.path(), data, (error) => {
+    this._cache.set(this.key(), data, (error) => {
       if (error) {
         callback(error);
         return;
@@ -99,14 +99,14 @@ export default class ClientPage {
       return;
     }
 
-    this._cache.get(this.path(), (error, cacheData) => {
+    this._cache.get(this.key(), (error, cacheData) => {
       if (error) {
         callback(error);
         return;
       }
 
       const newData = applyDiff(cacheData, diff);
-      this._cache.set(this.path(), newData, callback);
+      this._cache.set(this.key(), newData, callback);
     });
   }
 

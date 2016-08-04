@@ -1,4 +1,3 @@
-import ModelError from '../../error';
 import Request from '../request';
 
 export default class DeleteRequest extends Request {
@@ -7,19 +6,23 @@ export default class DeleteRequest extends Request {
   }
 
   _request(callback) {
-    const request = {
+    const request = this._object.connection().request({
       method: 'DELETE',
       path: this._object.path()
-    };
+    }, (response) => {
+      this._handleResponse(request, response, callback);
+    });
 
-    this._object.connection()
-      .request(request, (response) => {
-        this._handleResponse(response, callback);
-      })
-      .end();
+    request.once('error', (error) => {
+      this._handleError(error);
+    });
+
+    request.end();
   }
 
-  _handleResponse(response, callback) {
+  _handleResponse(request, response, callback) {
+    request.removeAllListeners();
+
     response.once('data', (data) => {
       this._handleData(data, response, callback);
     });
@@ -33,15 +36,15 @@ export default class DeleteRequest extends Request {
     response.removeAllListeners();
 
     if (response.statusCode !== 200) {
-      callback(new ModelError(data, response.statusCode));
+      callback(new Error(data));
       return;
     }
 
     callback(null, null, this._object);
   }
 
-  _handleError(error, response, callback) {
-    response.removeAllListeners();
+  _handleError(error, source, callback) {
+    source.removeAllListeners();
     callback(error);
   }
 }

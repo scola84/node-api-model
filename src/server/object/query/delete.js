@@ -9,7 +9,7 @@ export default class DeleteQuery extends Query {
 
   _handleQuery(error, callback) {
     if (error) {
-      callback(new Error('500 query_failed ' + error.message));
+      callback(new Error('500 invalid_query ' + error.message));
       return;
     }
 
