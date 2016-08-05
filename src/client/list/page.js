@@ -98,10 +98,14 @@ export default class ClientPage {
   }
 
   _bindConnection() {
+    this._list.connection()
+      .setMaxListeners(this._list.connection().getMaxListeners() + 1);
     this._list.connection().addListener('open', this._handleOpen);
   }
 
   _unbindConnection() {
+    this._list.connection()
+      .setMaxListeners(this._list.connection().getMaxListeners() - 1);
     this._list.connection().removeListener('open', this._handleOpen);
   }
 

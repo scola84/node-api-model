@@ -259,10 +259,12 @@ export default class ServerList {
   }
 
   _bindConnection(connection) {
+    connection.setMaxListeners(connection.getMaxListeners() + 1);
     connection.once('close', this._handleClose);
   }
 
   _unbindConnection(connection) {
+    connection.setMaxListeners(connection.getMaxListeners() - 1);
     connection.removeListener('close', this._handleClose);
   }
 

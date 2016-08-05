@@ -184,10 +184,12 @@ export default class ClientObject extends EventEmitter {
   }
 
   _bindConnection() {
+    this._connection.setMaxListeners(this._connection.getMaxListeners() + 1);
     this._connection.addListener('open', this._handleOpen);
   }
 
   _unbindConnection() {
+    this._connection.setMaxListeners(this._connection.getMaxListeners() - 1);
     this._connection.removeListener('open', this._handleOpen);
   }
 
