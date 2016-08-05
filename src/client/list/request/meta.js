@@ -1,3 +1,4 @@
+import { ScolaError } from '@scola/error';
 import Request from '../request';
 
 export default class MetaRequest extends Request {
@@ -13,34 +14,27 @@ export default class MetaRequest extends Request {
         return;
       }
 
-      const filter = this._list.filter(true);
-      const order = this._list.order(true);
+      this._list.query((queryError, filter, order) => {
+        if (queryError) {
+          callback(queryError);
+          return;
+        }
 
-      this._validate(filter, order, (filterError, orderError) => {
-        this._handleValidate(filterError, orderError, callback);
+        this._request(filter, order, callback);
       });
     });
   }
 
-  _handleValidate(filterError, orderError, callback) {
-    if (filterError || orderError) {
-      callback(filterError || orderError);
-      return;
-    }
-
-    this._request(callback);
-  }
-
-  _request(callback) {
+  _request(filter, order, callback) {
     const request = this._list.connection().request({
-        path: this._list.path(),
-        query: {
-          filter: this._list.filter(),
-          order: this._list.order()
-        }
-      }, (response) => {
-        this._handleResponse(request, response, callback);
-      });
+      path: this._list.path(),
+      query: {
+        filter,
+        order
+      }
+    }, (response) => {
+      this._handleResponse(request, response, callback);
+    });
 
     request.once('error', (error) => {
       this._handleError(error, request, callback);
@@ -65,7 +59,7 @@ export default class MetaRequest extends Request {
     response.removeAllListeners();
 
     if (response.statusCode !== 200) {
-      callback(new Error(data));
+      callback(new ScolaError(data));
       return;
     }
 

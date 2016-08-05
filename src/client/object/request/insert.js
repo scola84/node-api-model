@@ -1,3 +1,4 @@
+import { ScolaError } from '@scola/error';
 import Request from '../request';
 
 export default class InsertRequest extends Request {
@@ -47,7 +48,7 @@ export default class InsertRequest extends Request {
     response.removeAllListeners();
 
     if (response.statusCode !== 201) {
-      callback(new Error(data));
+      callback(new ScolaError(data));
       return;
     }
 

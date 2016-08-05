@@ -1,4 +1,5 @@
 import odiff from 'odiff';
+import { ScolaError } from '@scola/error';
 import Query from '../query';
 
 export default class UpdateQuery extends Query {
@@ -14,7 +15,7 @@ export default class UpdateQuery extends Query {
 
   _handleError(error, request, callback) {
     request.removeAllListeners();
-    callback(new Error('400 invalid_request ' + error.message));
+    callback(new ScolaError('400 invalid_request ' + error.message));
   }
 
   _handleData(data, request, callback) {
@@ -42,7 +43,7 @@ export default class UpdateQuery extends Query {
 
   _handleValidate(error, changed, diff, request, callback) {
     if (error) {
-      callback(new Error('400 invalid_input ' + error.message));
+      callback(new ScolaError('400 invalid_input ' + error.message));
       return;
     }
 
@@ -53,7 +54,7 @@ export default class UpdateQuery extends Query {
 
   _handleQuery(error, changed, diff, callback) {
     if (error) {
-      callback(new Error('500 invalid_query ' + error.message));
+      callback(new ScolaError('500 invalid_query ' + error.message));
       return;
     }
 

@@ -1,9 +1,5 @@
-function end(field, value, fields, enclosed) {
+function end(field, value, fields) {
   if (value) {
-    if (!isNaN(value) && !enclosed) {
-      value = Number(value);
-    }
-
     fields[field] = fields[field] || [];
     fields[field].push(value);
   }
@@ -25,7 +21,7 @@ export default function parseFilter(filter, translate) {
       if (enclosed === true) {
         value += filter[i];
       } else if (enclosed === false) {
-        fields = end(field, value, fields, filter[i - 1] === '"');
+        fields = end(field, value, fields);
         value = '';
         field = '';
       }
@@ -37,5 +33,5 @@ export default function parseFilter(filter, translate) {
     }
   }
 
-  return end(field, value, fields, filter[i - 1] === '"');
+  return end(field, value, fields);
 }

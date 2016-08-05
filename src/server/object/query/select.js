@@ -1,3 +1,4 @@
+import { ScolaError } from '@scola/error';
 import Query from '../query';
 
 export default class SelectQuery extends Query {
@@ -21,12 +22,12 @@ export default class SelectQuery extends Query {
 
   _handleQuery(error, data, callback) {
     if (error) {
-      callback(new Error('500 invalid_query ' + error.message));
+      callback(new ScolaError('500 invalid_query ' + error.message));
       return;
     }
 
     if (!data) {
-      callback(new Error('404 invalid_object ' + this._object.path()));
+      callback(new ScolaError('404 invalid_object ' + this._object.path()));
       return;
     }
 

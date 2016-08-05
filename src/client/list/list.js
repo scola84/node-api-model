@@ -1,9 +1,11 @@
 import EventEmitter from 'events';
+import series from 'async/series';
 import eachOf from 'async/eachOf';
 import MetaRequest from './request/meta';
 import ClientPage from './page';
 import applyDiff from '../../helper/apply-diff';
 import formatFilter from '../../helper/format-filter';
+import formatOrder from '../../helper/format-order';
 import parseFilter from '../../helper/parse-filter';
 import parseOrder from '../../helper/parse-order';
 
@@ -19,7 +21,9 @@ export default class ClientList extends EventEmitter {
     this._connection = null;
 
     this._translate = null;
-    this._validate = null;
+    this._validateFilter = null;
+    this._validateOrder = null;
+
     this._meta = null;
     this._select = null;
 
@@ -29,6 +33,7 @@ export default class ClientList extends EventEmitter {
     this._order = '';
     this._count = 15;
 
+    this._query = null;
     this._pages = new Map();
 
     this._handleOpen = () => this._open();
@@ -99,53 +104,21 @@ export default class ClientList extends EventEmitter {
     return this;
   }
 
-  translate(translate) {
-    if (typeof translate === 'undefined') {
-      return this._translate;
-    }
-
-    this._translate = translate;
-    return this;
-  }
-
-  validate(validate) {
-    if (typeof validate === 'undefined') {
-      return this._validate;
-    }
-
-    this._validate = validate;
-    return this;
-  }
-
   filter(filter) {
     if (typeof filter === 'undefined') {
-      return this._rawFilter;
-    }
-
-    if (filter === true) {
       return this._filter;
     }
 
-    filter = parseFilter(filter, this._translate);
-
-    this._rawFilter = formatFilter(filter);
     this._filter = filter;
-
     return this;
   }
 
   order(order) {
     if (typeof order === 'undefined') {
-      return this._rawOrder;
-    }
-
-    if (order === true) {
       return this._order;
     }
 
-    this._rawOrder = order;
-    this._order = parseOrder(order);
-
+    this._order = order;
     return this;
   }
 
@@ -156,6 +129,45 @@ export default class ClientList extends EventEmitter {
 
     this._count = count;
     return this;
+  }
+
+  translate(translate) {
+    this._translate = translate;
+    return this;
+  }
+
+  validate(filter, order) {
+    this._validateFilter = filter;
+    this._validateOrder = order;
+
+    return this;
+  }
+
+  query(callback) {
+    if (this._query) {
+      callback(null, this._query.filter, this._query.order);
+      return;
+    }
+
+    const filter = parseFilter(this._filter);
+    const order = parseOrder(this._order);
+
+    series([
+      (asyncCallback) => this._validateFilter(filter, asyncCallback),
+      (asyncCallback) => this._validateOrder(order, asyncCallback)
+    ], (error) => {
+      if (error) {
+        callback(error);
+        return;
+      }
+
+      this._query = {
+        filter: formatFilter(filter),
+        order: formatOrder(order)
+      };
+
+      callback(null, this._query.filter, this._query.order);
+    });
   }
 
   path() {
@@ -203,8 +215,7 @@ export default class ClientList extends EventEmitter {
   meta() {
     if (!this._meta) {
       this._meta = new MetaRequest()
-        .list(this)
-        .validate(this._validate);
+        .list(this);
     }
 
     return this._meta;
@@ -222,8 +233,7 @@ export default class ClientList extends EventEmitter {
       this._pages.set(index, new ClientPage()
         .index(index)
         .list(this)
-        .cache(this._cache)
-        .validate(this._validate));
+        .cache(this._cache));
     }
 
     return this._pages.get(index);

@@ -1,8 +1,8 @@
-export default function parseOrder(orders) {
-  orders = orders.length > 0 ? orders.split(';') : [];
+export default function parseOrder(order) {
+  order = order.length > 0 ? order.split(';') : [];
 
-  return orders.reduce((fields, order) => {
-    const [field, direction] = order.split(':');
+  return order.reduce((fields, part) => {
+    const [field, direction] = part.split(':');
     fields[field] = direction;
     return fields;
   }, {});

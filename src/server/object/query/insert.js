@@ -1,3 +1,4 @@
+import { ScolaError } from '@scola/error';
 import Query from '../query';
 
 export default class InsertQuery extends Query {
@@ -13,7 +14,7 @@ export default class InsertQuery extends Query {
 
   _handleError(error, request, callback) {
     request.removeAllListeners();
-    callback(new Error('400 invalid_request ' + error.message));
+    callback(new ScolaError('400 invalid_request ' + error.message));
   }
 
   _handleData(data, request, callback) {
@@ -26,7 +27,7 @@ export default class InsertQuery extends Query {
 
   _handleValidate(error, data, request, callback) {
     if (error) {
-      callback(new Error('400 invalid_input ' + error.message));
+      callback(new ScolaError('400 invalid_input ' + error.message));
       return;
     }
 
@@ -37,7 +38,7 @@ export default class InsertQuery extends Query {
 
   _handleQuery(error, id, data, callback) {
     if (error) {
-      callback(new Error('500 invalid_query ' + error.message));
+      callback(new ScolaError('500 invalid_query ' + error.message));
       return;
     }
 

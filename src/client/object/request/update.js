@@ -1,4 +1,5 @@
 import odiff from 'odiff';
+import { ScolaError } from '@scola/error';
 import Request from '../request';
 
 export default class UpdateRequest extends Request {
@@ -58,7 +59,7 @@ export default class UpdateRequest extends Request {
     response.removeAllListeners();
 
     if (response.statusCode !== 200) {
-      callback(new Error(data));
+      callback(new ScolaError(data));
       return;
     }
 

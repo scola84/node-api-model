@@ -14,9 +14,4 @@ export default class Query {
     this._query = query;
     return this;
   }
-
-  validate(validate) {
-    this._validate = validate;
-    return this;
-  }
 }

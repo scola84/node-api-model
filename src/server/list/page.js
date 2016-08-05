@@ -6,8 +6,6 @@ export default class ServerPage {
     this._index = null;
     this._list = null;
     this._cache = null;
-
-    this._validate = null;
     this._select = null;
   }
 
@@ -46,15 +44,6 @@ export default class ServerPage {
     return this;
   }
 
-  validate(validate) {
-    if (typeof validate === 'undefined') {
-      return this._validate;
-    }
-
-    this._validate = validate;
-    return this;
-  }
-
   path() {
     return this._list.path() + '/' + this._index;
   }
@@ -83,8 +72,7 @@ export default class ServerPage {
     this._select = new SelectQuery()
       .list(this._list)
       .page(this)
-      .query(select)
-      .validate(this._validate);
+      .query(select);
 
     return this;
   }

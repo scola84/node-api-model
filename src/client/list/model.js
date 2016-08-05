@@ -8,7 +8,8 @@ export default class ClientListModel {
     this._connection = null;
 
     this._translate = (f) => f;
-    this._validate = (d, c) => c();
+    this._filter = (f, c) => c();
+    this._order = (o, c) => c();
   }
 
   name(name) {
@@ -36,8 +37,10 @@ export default class ClientListModel {
     return this;
   }
 
-  validate(validate) {
-    this._validate = validate;
+  validate(filter, order) {
+    this._filter = filter;
+    this._order = order;
+
     return this;
   }
 
@@ -49,7 +52,7 @@ export default class ClientListModel {
       .cache(this._cache)
       .connection(this._connection)
       .translate(this._translate)
-      .validate(this._validate)
+      .validate(this._filter, this._order)
       .filter(params.filter)
       .order(params.order);
   }

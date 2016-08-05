@@ -1,3 +1,4 @@
+import { ScolaError } from '@scola/error';
 import Query from '../query';
 
 export default class SelectQuery extends Query {
@@ -27,35 +28,27 @@ export default class SelectQuery extends Query {
         return;
       }
 
-      const filter = this._list.filter(true);
-      const order = this._list.order(true);
+      this._list.query((listError, filter, order) => {
+        if (listError) {
+          callback(new ScolaError('400 invalid_input ' + listError.message));
+          return;
+        }
 
-      this._validate(filter, order, (filterError, orderError) => {
-        this._handleValidate(filterError, orderError, filter, order, callback);
+        const limit = {
+          offset: this._page.index() * this._list.count(),
+          count: this._list.count()
+        };
+
+        this._query(filter, order, limit, (queryError, queryData) => {
+          this._handleQuery(queryError, queryData, callback);
+        });
       });
-    });
-  }
-
-  _handleValidate(filterError, orderError, filter, order, callback) {
-    if (filterError || orderError) {
-      callback(new Error('400 invalid_input ' +
-        (filterError || orderError).message));
-      return;
-    }
-
-    const limit = {
-      offset: this._page.index() * this._list.count(),
-      count: this._list.count()
-    };
-
-    this._query(filter, order, limit, (error, data) => {
-      this._handleQuery(error, data, callback);
     });
   }
 
   _handleQuery(error, data, callback) {
     if (error) {
-      callback(new Error('500 invalid_query ' + error.message));
+      callback(new ScolaError('500 invalid_query ' + error.message));
       return;
     }
 

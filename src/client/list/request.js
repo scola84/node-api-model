@@ -1,7 +1,6 @@
 export default class Request {
   constructor() {
     this._list = null;
-    this._validate = null;
   }
 
   list(list) {
@@ -10,15 +9,6 @@ export default class Request {
     }
 
     this._list = list;
-    return this;
-  }
-
-  validate(validate) {
-    if (typeof validate === 'undefined') {
-      return this._validate;
-    }
-
-    this._validate = validate;
     return this;
   }
 }

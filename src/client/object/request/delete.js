@@ -1,3 +1,4 @@
+import { ScolaError } from '@scola/error';
 import Request from '../request';
 
 export default class DeleteRequest extends Request {
@@ -36,7 +37,7 @@ export default class DeleteRequest extends Request {
     response.removeAllListeners();
 
     if (response.statusCode !== 200) {
-      callback(new Error(data));
+      callback(new ScolaError(data));
       return;
     }
 

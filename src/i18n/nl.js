@@ -1,10 +1,9 @@
 export default {
   scola: {
-    'api-model': {
-      input_invalid: 'De invoer is ongeldig.',
-      not_found: 'Niet gevonden',
-      query_failed: 'Er is een serverfout opgetreden.',
-      request_failed: 'Er is een verbindingsfout opgetreden.'
+    error: {
+      invalid_input: 'De invoer is ongeldig.',
+      invalid_object: 'Het object is niet gevonden.',
+      invalid_query: 'Er is een serverfout opgetreden.'
     }
   }
 };

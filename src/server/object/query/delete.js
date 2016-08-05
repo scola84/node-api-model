@@ -1,3 +1,4 @@
+import { ScolaError } from '@scola/error';
 import Query from '../query';
 
 export default class DeleteQuery extends Query {
@@ -9,7 +10,7 @@ export default class DeleteQuery extends Query {
 
   _handleQuery(error, callback) {
     if (error) {
-      callback(new Error('500 invalid_query ' + error.message));
+      callback(new ScolaError('500 invalid_query ' + error.message));
       return;
     }
 

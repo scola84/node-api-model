@@ -9,7 +9,8 @@ export default class ServerListModel {
     this._select = null;
 
     this._authorize = (r, c) => c();
-    this._validate = (r, d, c) => c();
+    this._filter = (f, c) => c();
+    this._order = (o, c) => c();
   }
 
   name(name) {
@@ -27,8 +28,10 @@ export default class ServerListModel {
     return this;
   }
 
-  validate(validate) {
-    this._validate = validate;
+  validate(filter, order) {
+    this._filter = filter;
+    this._order = order;
+
     return this;
   }
 
@@ -47,7 +50,7 @@ export default class ServerListModel {
       .id(id)
       .name(this._name)
       .cache(this._cache)
-      .validate(this._validate)
+      .validate(this._filter, this._order)
       .meta(this._meta)
       .select(this._select)
       .filter(params.filter)

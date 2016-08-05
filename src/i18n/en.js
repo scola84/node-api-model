@@ -1,10 +1,9 @@
 export default {
   scola: {
-    'api-model': {
-      input_invalid: 'The input is invalid.',
-      not_found: 'Not Found',
-      query_failed: 'A server error occurred.',
-      request_failed: 'A connection error occurred.'
+    error: {
+      invalid_input: 'The input is invalid.',
+      invalid_object: 'The object was not found.',
+      invalid_query: 'A server error occurred.'
     }
   }
 };

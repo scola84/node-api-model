@@ -5,10 +5,7 @@ export default class ClientPage {
   constructor() {
     this._index = null;
     this._list = null;
-
     this._cache = null;
-
-    this._validate = null;
     this._select = null;
 
     this._handleOpen = () => this._open();
@@ -53,15 +50,6 @@ export default class ClientPage {
     return this;
   }
 
-  validate(validate) {
-    if (typeof validate === 'undefined') {
-      return this._validate;
-    }
-
-    this._validate = validate;
-    return this;
-  }
-
   key() {
     return this._list.key() + '/' + this._index;
   }
@@ -86,8 +74,7 @@ export default class ClientPage {
     if (!this._select) {
       this._select = new SelectRequest()
         .list(this._list)
-        .page(this)
-        .validate(this._validate);
+        .page(this);
     }
 
     return this._select;
