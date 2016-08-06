@@ -7,45 +7,34 @@ export default class DeleteRequest extends Request {
   }
 
   _request(callback) {
-    const request = this._object.connection().request({
-      method: 'DELETE',
-      path: this._object.path()
-    }, (response) => {
-      this._handleResponse(request, response, callback);
-    });
-
-    request.once('error', (error) => {
-      this._handleError(error);
-    });
-
-    request.end();
+    const request = this._object.connection().request()
+      .method('DELETE')
+      .path(this._object.path())
+      .once('error', callback)
+      .end(null, (response) => {
+        request.removeAllListeners();
+        this._handleResponse(response, callback);
+      });
   }
 
-  _handleResponse(request, response, callback) {
-    request.removeAllListeners();
-
+  _handleResponse(response, callback) {
     response.once('data', (data) => {
+      response.removeAllListeners();
       this._handleData(data, response, callback);
     });
 
     response.once('error', (error) => {
-      this._handleError(error, response, callback);
+      response.removeAllListeners();
+      callback(error);
     });
   }
 
   _handleData(data, response, callback) {
-    response.removeAllListeners();
-
-    if (response.statusCode !== 200) {
+    if (response.status() !== 200) {
       callback(new ScolaError(data));
       return;
     }
 
     callback(null, null, this._object);
-  }
-
-  _handleError(error, source, callback) {
-    source.removeAllListeners();
-    callback(error);
   }
 }

@@ -18,41 +18,35 @@ export default class InsertRequest extends Request {
   }
 
   _request(data, callback) {
-    const request = this._object.connection().request({
-      method: 'POST',
-      path: '/' + this._object.name()
-    }, (response) => {
-      this._handleResponse(request, response, callback);
-    });
-
-    request.once('error', (error) => {
-      this._handleError(error, request, callback);
-    });
-
-    request.end(data);
+    const request = this._object.connection().request()
+      .method('POST')
+      .path('/' + this._object.name())
+      .once('error', callback)
+      .end(data, (response) => {
+        request.removeAllListeners();
+        this._handleResponse(response, callback);
+      });
   }
 
-  _handleResponse(request, response, callback) {
-    request.removeAllListeners();
-
+  _handleResponse(response, callback) {
     response.once('data', (data) => {
+      response.removeAllListeners();
       this._handleData(data, response, callback);
     });
 
     response.once('error', (error) => {
-      this._handleError(error, response, callback);
+      response.removeAllListeners();
+      callback(error);
     });
   }
 
   _handleData(data, response, callback) {
-    response.removeAllListeners();
-
-    if (response.statusCode !== 201) {
+    if (response.status() !== 201) {
       callback(new ScolaError(data));
       return;
     }
 
-    const id = response.headers.id;
+    const id = response.header('id');
 
     this._object
       .id(id)
@@ -69,10 +63,5 @@ export default class InsertRequest extends Request {
 
         callback(null, data, this._object);
       });
-  }
-
-  _handleError(error, source, callback) {
-    source.removeAllListeners();
-    callback(error);
   }
 }

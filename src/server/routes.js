@@ -1,17 +1,10 @@
 export default function serverRoutes(router, factory, callback) {
-  router.pub('/:name/:id', (request, response, next) => {
-    request.once('data', (data) => {
+  router.sub('/:name', (request, response, next) => {
+    request.once('data', (action) => {
       factory
-        .model(request.params.name)
-        .lists()
-        .forEach((list) => {
-          list.change(data.action, data.diff, request.params.id, callback);
-        });
-
-      factory
-        .model(request.params.name)
-        .object(request.params)
-        .change(data.action, data.diff, callback);
+        .model(request.param('name'))
+        .list(request.query())
+        .subscribe(request.connection(), action);
     });
 
     next();
@@ -20,20 +13,28 @@ export default function serverRoutes(router, factory, callback) {
   router.sub('/:name/:id', (request, response, next) => {
     request.once('data', (action) => {
       factory
-        .model(request.params.name)
-        .object(request.params)
-        .subscribe(request.connection, action);
+        .model(request.param('name'))
+        .object(request.param())
+        .subscribe(request.connection(), action);
     });
 
     next();
   });
 
-  router.sub('/:name', (request, response, next) => {
-    request.once('data', (action) => {
+  router.pub('/:name/:id', (request, response, next) => {
+    request.once('data', (data) => {
       factory
-        .model(request.params.name)
-        .list(request.query)
-        .subscribe(request.connection, action);
+        .model(request.param('name'))
+        .lists()
+        .forEach((list) => {
+          list.change(data.action, data.diff,
+            request.param('id'), callback);
+        });
+
+      factory
+        .model(request.param('name'))
+        .object(request.param())
+        .change(data.action, data.diff, callback);
     });
 
     next();

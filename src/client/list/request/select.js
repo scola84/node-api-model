@@ -40,40 +40,34 @@ export default class SelectRequest extends Request {
   }
 
   _request(filter, order, callback) {
-    const request = this._list.connection().request({
-      path: this._list.path(),
-      query: {
+    const request = this._list.connection().request()
+      .path(this._list.path())
+      .query({
         filter,
         order,
         page: this._page.index()
-      }
-    }, (response) => {
-      this._handleResponse(request, response, callback);
-    });
-
-    request.once('error', (error) => {
-      this._handleError(error, request, callback);
-    });
-
-    request.end();
+      })
+      .once('error', callback)
+      .end(null, (response) => {
+        request.removeAllListeners();
+        this._handleResponse(response, callback);
+      });
   }
 
-  _handleResponse(request, response, callback) {
-    request.removeAllListeners();
-
+  _handleResponse(response, callback) {
     response.once('data', (data) => {
+      response.removeAllListeners();
       this._handleData(data, response, callback);
     });
 
     response.once('error', (error) => {
-      this._handleError(error, response, callback);
+      response.removeAllListeners();
+      callback(error);
     });
   }
 
   _handleData(data, response, callback) {
-    response.removeAllListeners();
-
-    if (response.statusCode !== 200) {
+    if (response.status() !== 200) {
       callback(new ScolaError(data));
       return;
     }
@@ -81,10 +75,5 @@ export default class SelectRequest extends Request {
     this._page.data(data, (error) => {
       callback(error, data, this._page);
     });
-  }
-
-  _handleError(error, source, callback) {
-    source.removeAllListeners();
-    callback(error);
   }
 }

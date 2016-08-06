@@ -206,13 +206,14 @@ export default class ServerObject {
 
   notifyClients(action, diff) {
     this._connections.forEach((connection) => {
-      connection.request({
-        method: 'PUB',
-        path: this.path()
-      }).end({
-        action,
-        diff
-      });
+      connection.request()
+        .method('PUB')
+        .path(this.path())
+        .once('error', () => {})
+        .end({
+          action,
+          diff
+        });
     });
 
     return this;
@@ -223,13 +224,14 @@ export default class ServerObject {
       return this;
     }
 
-    this._connection.request({
-      method: 'PUB',
-      path: this.path()
-    }).end({
-      action,
-      diff
-    });
+    this._connection.request()
+      .method('PUB')
+      .path(this.path())
+      .once('error', () => {})
+      .end({
+        action,
+        diff
+      });
 
     return this;
   }

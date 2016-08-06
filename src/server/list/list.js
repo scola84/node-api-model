@@ -245,16 +245,17 @@ export default class ServerList {
 
   notifyClients(action, diff) {
     this._connections.forEach((connection) => {
-      connection.request({
-        method: 'PUB',
-        path: '/' + this._name,
-        query: {
+      connection.request()
+        .method('PUB')
+        .path('/' + this._name)
+        .query({
           id: this._id
-        }
-      }).end({
-        action,
-        diff
-      });
+        })
+        .once('error', () => {})
+        .end({
+          action,
+          diff
+        });
     });
   }
 

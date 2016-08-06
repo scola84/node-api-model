@@ -122,13 +122,11 @@ export default class ClientObject extends EventEmitter {
   subscribe(subscribed) {
     this._subscribed = subscribed;
 
-    const request = this._connection.request({
-      method: 'SUB',
-      path: this.path()
-    });
-
-    request.once('error', () => {});
-    request.end(subscribed);
+    this._connection.request()
+      .method('SUB')
+      .path(this.path())
+      .once('error', () => {})
+      .end(subscribed);
 
     return this;
   }

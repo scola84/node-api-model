@@ -197,17 +197,15 @@ export default class ClientList extends EventEmitter {
   subscribe(subscribed) {
     this._subscribed = subscribed;
 
-    const request = this._connection.request({
-      method: 'SUB',
-      path: this.path(),
-      query: {
+    this._connection.request()
+      .method('SUB')
+      .path(this.path())
+      .query({
         filter: this.filter(),
         order: this.order()
-      }
-    });
-
-    request.once('error', () => {});
-    request.end(subscribed);
+      })
+      .once('error', () => {})
+      .end(subscribed);
 
     return this;
   }

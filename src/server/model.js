@@ -28,13 +28,11 @@ export default class ServerModel {
   }
 
   subscribe(action) {
-    const request = this._connection.request({
-      method: 'SUB',
-      path: '/' + this._name
-    });
-
-    request.once('error', () => {});
-    request.end(action);
+    this._connection.request()
+      .method('SUB')
+      .path('/' + this._name)
+      .once('error', () => {})
+      .end(action);
 
     return this;
   }
