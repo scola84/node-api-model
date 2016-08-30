@@ -4,8 +4,6 @@ import eachOf from 'async/eachOf';
 import MetaRequest from './request/meta';
 import ClientPage from './page';
 import applyDiff from '../../helper/apply-diff';
-import formatFilter from '../../helper/format-filter';
-import formatOrder from '../../helper/format-order';
 import parseFilter from '../../helper/parse-filter';
 import parseOrder from '../../helper/parse-order';
 
@@ -162,8 +160,8 @@ export default class ClientList extends EventEmitter {
       }
 
       this._query = {
-        filter: formatFilter(filter),
-        order: formatOrder(order)
+        filter: this._filter,
+        order: this._order
       };
 
       callback(null, this._query.filter, this._query.order);
@@ -280,25 +278,28 @@ export default class ClientList extends EventEmitter {
   }
 
   _changeMeta(action, diff, callback) {
-    this._cache.get(this.key(), (error, cacheData) => {
+    this._cache.get(this.key(), (error, data) => {
       if (error) {
         callback(error);
         return;
       }
 
-      cacheData = Object.assign({}, cacheData);
-      cacheData = applyDiff(cacheData, diff.meta);
+      data = Object.assign({}, data);
+      data = applyDiff(data, diff.meta);
 
-      this._cache.set(this.key(), cacheData, (cacheError) => {
+      this._cache.set(this.key(), data, (cacheError) => {
         if (cacheError) {
           callback(cacheError);
           return;
         }
 
-        this.emit(action, diff, cacheData);
-        this.emit('change', action, diff, cacheData);
+        this.emit('change', {
+          action,
+          data,
+          diff
+        });
 
-        callback(null, diff, cacheData);
+        callback(null, diff, data);
       });
     });
   }

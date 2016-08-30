@@ -192,32 +192,37 @@ export default class ClientObject extends EventEmitter {
   }
 
   _changeUpdate(diff, callback) {
-    this._cache.get(this.path(), (error, cacheData) => {
+    this._cache.get(this.path(), (error, data) => {
       if (error) {
         callback(error);
         return;
       }
 
-      cacheData = Object.assign({}, cacheData);
-      cacheData = applyDiff(cacheData, diff);
+      data = Object.assign({}, data);
+      data = applyDiff(data, diff);
 
-      this._cache.set(this.path(), cacheData, (cacheError) => {
+      this._cache.set(this.path(), data, (cacheError) => {
         if (cacheError) {
           callback(cacheError);
           return;
         }
 
-        this.emit('update', diff, cacheData);
-        this.emit('change', 'update', diff, cacheData);
+        this.emit('change', {
+          action: 'update',
+          data,
+          diff
+        });
 
-        callback(null, diff, cacheData);
+        callback(null, diff, data);
       });
     });
   }
 
   _changeDelete(diff, callback) {
-    this.emit('delete', diff);
-    this.emit('change', 'delete', diff);
+    this.emit('change', {
+      action: 'delete',
+      diff
+    });
 
     this._subscribed = false;
     this.destroy(true);
