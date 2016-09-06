@@ -22,85 +22,85 @@ export default class ServerObject {
     this._delete = null;
 
     this._connections = new Set();
-    this._handleClose = (e, c) => this.subscribe(c, false);
+    this._handleClose = (e) => this.subscribe(e.connection, false);
   }
 
   destroy(cache) {
+    this._model.object({
+      id: this._id
+    }, 'delete');
+
     this._connections.forEach((connection) => {
       this._unbindConnection(connection);
     });
 
     this._connections.clear();
 
-    this._model.object({
-      id: this._id
-    }, 'delete');
-
     if (cache === true) {
       this._cache.delete(this.path());
     }
   }
 
-  id(id) {
-    if (typeof id === 'undefined') {
+  id(value) {
+    if (typeof value === 'undefined') {
       return this._id;
     }
 
-    this._id = id;
+    this._id = value;
     return this;
   }
 
-  name(name) {
-    if (typeof name === 'undefined') {
+  name(value) {
+    if (typeof value === 'undefined') {
       return this._name;
     }
 
-    this._name = name;
+    this._name = value;
     return this;
   }
 
-  model(model) {
-    if (typeof model === 'undefined') {
+  model(value) {
+    if (typeof value === 'undefined') {
       return this._model;
     }
 
-    this._model = model;
+    this._model = value;
     return this;
   }
 
-  cache(cache) {
-    if (typeof cache === 'undefined') {
+  cache(value) {
+    if (typeof value === 'undefined') {
       return this._cache;
     }
 
-    this._cache = cache;
+    this._cache = value;
     return this;
   }
 
-  connection(connection) {
-    if (typeof connection === 'undefined') {
+  connection(value) {
+    if (typeof value === 'undefined') {
       return this._connection;
     }
 
-    this._connection = connection;
+    this._connection = value;
     return this;
   }
 
-  authorize(authorize) {
-    if (typeof authorize === 'undefined') {
+  authorize(value) {
+    if (typeof value === 'undefined') {
       return this._authorize;
     }
 
-    this._authorize = authorize;
+    this._authorize = value;
     return this;
   }
 
-  validate(validate) {
-    if (typeof validate === 'undefined') {
+  validate(value) {
+    if (typeof value === 'undefined') {
       return this._validate;
     }
 
-    this._validate = validate;
+    this._validate = value;
     return this;
   }
 
@@ -108,19 +108,19 @@ export default class ServerObject {
     return '/' + this._name + '/' + this._id;
   }
 
-  data(data, callback = () => {}) {
-    if (typeof data === 'function') {
-      this._cache.get(this.path(), data);
+  data(value, callback = () => {}) {
+    if (typeof value === 'function') {
+      this._cache.get(this.path(), value);
       return;
     }
 
-    this._cache.set(this.path(), data, (error) => {
+    this._cache.set(this.path(), value, (error) => {
       if (error) {
         callback(error);
         return;
       }
 
-      callback(null, data);
+      callback(null, value);
     });
   }
 

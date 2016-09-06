@@ -10,28 +10,28 @@ export default class ClientObjectModel {
     this._validate = (d, c) => c();
   }
 
-  name(name) {
-    this._name = name;
+  name(value) {
+    this._name = value;
     return this;
   }
 
-  model(model) {
-    this._model = model;
+  model(value) {
+    this._model = value;
     return this;
   }
 
-  cache(cache) {
-    this._cache = cache;
+  cache(value) {
+    this._cache = value;
     return this;
   }
 
-  connection(connection) {
-    this._connection = connection;
+  connection(value) {
+    this._connection = value;
     return this;
   }
 
-  validate(validate) {
-    this._validate = validate;
+  validate(value) {
+    this._validate = value;
     return this;
   }
 

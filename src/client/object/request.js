@@ -4,21 +4,21 @@ export default class Request {
     this._validate = null;
   }
 
-  object(object) {
-    if (typeof object === 'undefined') {
+  object(value) {
+    if (typeof value === 'undefined') {
       return this._object;
     }
 
-    this._object = object;
+    this._object = value;
     return this;
   }
 
-  validate(validate) {
-    if (typeof validate === 'undefined') {
+  validate(value) {
+    if (typeof value === 'undefined') {
       return this._validate;
     }
 
-    this._validate = validate;
+    this._validate = value;
     return this;
   }
 }

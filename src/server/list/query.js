@@ -5,13 +5,13 @@ export default class Query {
     this._validate = null;
   }
 
-  list(list) {
-    this._list = list;
+  list(value) {
+    this._list = value;
     return this;
   }
 
-  query(query) {
-    this._query = query;
+  query(value) {
+    this._query = value;
     return this;
   }
 }

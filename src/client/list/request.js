@@ -3,12 +3,12 @@ export default class Request {
     this._list = null;
   }
 
-  list(list) {
-    if (typeof list === 'undefined') {
+  list(value) {
+    if (typeof value === 'undefined') {
       return this._list;
     }
 
-    this._list = list;
+    this._list = value;
     return this;
   }
 }

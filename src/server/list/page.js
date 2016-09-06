@@ -17,30 +17,30 @@ export default class ServerPage {
     }
   }
 
-  index(index) {
-    if (typeof index === 'undefined') {
+  index(value) {
+    if (typeof value === 'undefined') {
       return this._index;
     }
 
-    this._index = index;
+    this._index = value;
     return this;
   }
 
-  list(list) {
-    if (typeof list === 'undefined') {
+  list(value) {
+    if (typeof value === 'undefined') {
       return this._list;
     }
 
-    this._list = list;
+    this._list = value;
     return this;
   }
 
-  cache(cache) {
-    if (typeof cache === 'undefined') {
+  cache(value) {
+    if (typeof value === 'undefined') {
       return this._cache;
     }
 
-    this._cache = cache;
+    this._cache = value;
     return this;
   }
 
@@ -48,13 +48,13 @@ export default class ServerPage {
     return this._list.path() + '/' + this._index;
   }
 
-  data(data, callback = () => {}) {
-    if (typeof data === 'function') {
-      this._cache.get(this.path(), data);
+  data(value, callback = () => {}) {
+    if (typeof value === 'function') {
+      this._cache.get(this.path(), value);
       return;
     }
 
-    this._cache.set(this.path(), data, (error) => {
+    this._cache.set(this.path(), value, (error) => {
       if (error) {
         callback(error);
         return;
@@ -64,15 +64,15 @@ export default class ServerPage {
     });
   }
 
-  select(select) {
-    if (typeof select === 'undefined') {
+  select(value) {
+    if (typeof value === 'undefined') {
       return this._select;
     }
 
     this._select = new SelectQuery()
       .list(this._list)
       .page(this)
-      .query(select);
+      .query(value);
 
     return this;
   }

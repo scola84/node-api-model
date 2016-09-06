@@ -5,18 +5,18 @@ export default class Query {
     this._validate = null;
   }
 
-  object(object) {
-    this._object = object;
+  object(value) {
+    this._object = value;
     return this;
   }
 
-  query(query) {
-    this._query = query;
+  query(value) {
+    this._query = value;
     return this;
   }
 
-  validate(validate) {
-    this._validate = validate;
+  validate(value) {
+    this._validate = value;
     return this;
   }
 }

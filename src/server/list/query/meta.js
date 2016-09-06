@@ -7,8 +7,8 @@ export default class MetaQuery extends Query {
     this._type = null;
   }
 
-  type(type) {
-    this._type = type;
+  type(value) {
+    this._type = value;
     return this;
   }
 

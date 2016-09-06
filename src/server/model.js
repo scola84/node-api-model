@@ -1,6 +1,6 @@
 import sha1 from 'sha1';
-import ServerListModel from './list/model';
-import ServerObjectModel from './object/model';
+import ServerListFactory from './list/factory';
+import ServerObjectFactory from './object/factory';
 
 export default class ServerModel {
   constructor() {
@@ -8,22 +8,25 @@ export default class ServerModel {
     this._cache = null;
     this._connection = null;
 
+    this._list = null;
+    this._object = null;
+
     this._lists = new Map();
     this._objects = new Map();
   }
 
-  name(name) {
-    this._name = name;
+  name(value) {
+    this._name = value;
     return this;
   }
 
-  cache(cache) {
-    this._cache = cache;
+  cache(value) {
+    this._cache = value;
     return this;
   }
 
-  connection(connection) {
-    this._connection = connection;
+  connection(value) {
+    this._connection = value;
     return this;
   }
 
@@ -41,10 +44,11 @@ export default class ServerModel {
     return this._lists;
   }
 
-  list(params) {
+  list(params, action) {
     if (typeof params === 'undefined') {
-      this._list = new ServerListModel()
+      this._list = new ServerListFactory()
         .name(this._name)
+        .model(this)
         .cache(this._cache);
       return this._list;
     }
@@ -55,6 +59,11 @@ export default class ServerModel {
     }, params);
 
     const id = params.id || sha1(params.filter + params.order);
+
+    if (action === 'delete') {
+      this._lists.delete(id);
+      return this;
+    }
 
     if (!this._lists.has(id)) {
       this._lists.set(id, this._list.create(id, params));
@@ -69,7 +78,7 @@ export default class ServerModel {
         return this._object.create(null);
       }
 
-      this._object = new ServerObjectModel()
+      this._object = new ServerObjectFactory()
         .name(this._name)
         .model(this)
         .cache(this._cache)

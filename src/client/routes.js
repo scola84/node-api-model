@@ -28,7 +28,7 @@ export default function clientRoutes(router, factory, callback) {
 
       factory
         .model(request.param('name'))
-        .object(request.param())
+        .object(request.params())
         .change(data.action, data.diff, callback);
     });
   });

@@ -1,6 +1,6 @@
 import ServerObject from './object';
 
-export default class ServerObjectModel {
+export default class ServerObjectFactory {
   constructor() {
     this._name = null;
     this._model = null;
@@ -16,53 +16,53 @@ export default class ServerObjectModel {
     this._delete = null;
   }
 
-  name(name) {
-    this._name = name;
+  name(value) {
+    this._name = value;
     return this;
   }
 
-  model(model) {
-    this._model = model;
+  model(value) {
+    this._model = value;
     return this;
   }
 
-  cache(cache) {
-    this._cache = cache;
+  cache(value) {
+    this._cache = value;
     return this;
   }
 
-  connection(connection) {
-    this._connection = connection;
+  connection(value) {
+    this._connection = value;
     return this;
   }
 
-  authorize(authorize) {
-    this._authorize = authorize;
+  authorize(value) {
+    this._authorize = value;
     return this;
   }
 
-  validate(validate) {
-    this._validate = validate;
+  validate(value) {
+    this._validate = value;
     return this;
   }
 
-  select(select) {
-    this._select = select;
+  select(value) {
+    this._select = value;
     return this;
   }
 
-  insert(insert) {
-    this._insert = insert;
+  insert(value) {
+    this._insert = value;
     return this;
   }
 
-  update(update) {
-    this._update = update;
+  update(value) {
+    this._update = value;
     return this;
   }
 
-  delete(deleter) {
-    this._delete = deleter;
+  delete(value) {
+    this._delete = value;
     return this;
   }
 

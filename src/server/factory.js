@@ -7,13 +7,13 @@ export default class ServerFactory {
     this._models = new Map();
   }
 
-  cache(cache) {
-    this._cache = cache;
+  cache(value) {
+    this._cache = value;
     return this;
   }
 
-  connection(connection) {
-    this._connection = connection;
+  connection(value) {
+    this._connection = value;
     return this;
   }
 

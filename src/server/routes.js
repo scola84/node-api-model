@@ -14,7 +14,7 @@ export default function serverRoutes(router, factory, callback) {
     request.once('data', (action) => {
       factory
         .model(request.param('name'))
-        .object(request.param())
+        .object(request.params())
         .subscribe(request.connection(), action);
     });
 
@@ -33,7 +33,7 @@ export default function serverRoutes(router, factory, callback) {
 
       factory
         .model(request.param('name'))
-        .object(request.param())
+        .object(request.params())
         .change(data.action, data.diff, callback);
     });
 

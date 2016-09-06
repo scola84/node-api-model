@@ -7,12 +7,12 @@ export default class SelectQuery extends Query {
     this._page = null;
   }
 
-  page(page) {
-    if (typeof page === 'undefined') {
+  page(value) {
+    if (typeof value === 'undefined') {
       return this._page;
     }
 
-    this._page = page;
+    this._page = value;
     return this;
   }
 

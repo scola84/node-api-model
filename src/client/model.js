@@ -1,6 +1,6 @@
 import sha1 from 'sha1';
-import ClientListModel from './list/model';
-import ClientObjectModel from './object/model';
+import ClientListFactory from './list/factory';
+import ClientObjectFactory from './object/factory';
 
 export default class ClientModel {
   constructor() {
@@ -12,24 +12,24 @@ export default class ClientModel {
     this._objects = new Map();
   }
 
-  name(name) {
-    this._name = name;
+  name(value) {
+    this._name = value;
     return this;
   }
 
-  cache(cache) {
-    this._cache = cache;
+  cache(value) {
+    this._cache = value;
     return this;
   }
 
-  connection(connection) {
-    this._connection = connection;
+  connection(value) {
+    this._connection = value;
     return this;
   }
 
-  list(params) {
+  list(params, action) {
     if (typeof params === 'undefined') {
-      this._list = new ClientListModel()
+      this._list = new ClientListFactory()
         .name(this._name)
         .model(this)
         .cache(this._cache)
@@ -44,6 +44,11 @@ export default class ClientModel {
 
     const id = params.id || sha1(params.filter + params.order);
 
+    if (action === 'delete') {
+      this._lists.delete(id);
+      return this;
+    }
+
     if (!this._lists.has(id)) {
       this._lists.set(id, this._list.create(id, params));
     }
@@ -57,7 +62,7 @@ export default class ClientModel {
         return this._object.create(null);
       }
 
-      this._object = new ClientObjectModel()
+      this._object = new ClientObjectFactory()
         .name(this._name)
         .model(this)
         .cache(this._cache)

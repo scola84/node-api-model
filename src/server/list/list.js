@@ -10,6 +10,7 @@ export default class ServerList {
   constructor() {
     this._id = null;
     this._name = null;
+    this._model = null;
     this._cache = null;
 
     this._validateFilter = null;
@@ -26,10 +27,14 @@ export default class ServerList {
     this._pages = new Map();
 
     this._connections = new Set();
-    this._handleClose = (e, c) => this.subscribe(c, false);
+    this._handleClose = (e) => this.subscribe(e.connection, false);
   }
 
   destroy(cache) {
+    this._model.list({
+      id: this._id
+    }, 'delete');
+
     this._connections.forEach((connection) => {
       this._unbindConnection(connection);
     });
@@ -42,66 +47,75 @@ export default class ServerList {
     this._pages.clear();
   }
 
-  id(id) {
-    if (typeof id === 'undefined') {
+  id(value) {
+    if (typeof value === 'undefined') {
       return this._id;
     }
 
-    this._id = id;
+    this._id = value;
     return this;
   }
 
-  name(name) {
-    if (typeof name === 'undefined') {
+  name(value) {
+    if (typeof value === 'undefined') {
       return this._name;
     }
 
-    this._name = name;
+    this._name = value;
     return this;
   }
 
-  cache(cache) {
-    if (typeof cache === 'undefined') {
+  model(value) {
+    if (typeof value === 'undefined') {
+      return this._model;
+    }
+
+    this._model = value;
+    return this;
+  }
+
+  cache(value) {
+    if (typeof value === 'undefined') {
       return this._cache;
     }
 
-    this._cache = cache;
+    this._cache = value;
     return this;
   }
 
-  select(select) {
-    if (typeof select === 'undefined') {
+  select(value) {
+    if (typeof value === 'undefined') {
       return this._select;
     }
 
-    this._select = select;
+    this._select = value;
     return this;
   }
 
-  filter(filter) {
-    if (typeof filter === 'undefined') {
+  filter(value) {
+    if (typeof value === 'undefined') {
       return this._filter;
     }
 
-    this._filter = filter;
+    this._filter = value;
     return this;
   }
 
-  order(order) {
-    if (typeof order === 'undefined') {
+  order(value) {
+    if (typeof value === 'undefined') {
       return this._order;
     }
 
-    this._order = order;
+    this._order = value;
     return this;
   }
 
-  count(count) {
-    if (typeof count === 'undefined') {
+  count(value) {
+    if (typeof value === 'undefined') {
       return this._count;
     }
 
-    this._count = count;
+    this._count = value;
     return this;
   }
 
@@ -143,19 +157,19 @@ export default class ServerList {
     return '/' + this._name + '/' + this._id;
   }
 
-  data(data, callback = () => {}) {
-    if (typeof data === 'function') {
-      this._cache.get(this.path(), data);
+  data(value, callback = () => {}) {
+    if (typeof value === 'function') {
+      this._cache.get(this.path(), value);
       return;
     }
 
-    this._cache.set(this.path(), data, (error) => {
+    this._cache.set(this.path(), value, (error) => {
       if (error) {
         callback(error);
         return;
       }
 
-      callback(null, data);
+      callback(null, value);
     });
   }
 
@@ -169,14 +183,14 @@ export default class ServerList {
     return this;
   }
 
-  meta(meta) {
-    if (typeof meta === 'undefined') {
+  meta(value) {
+    if (typeof value === 'undefined') {
       return this._meta;
     }
 
     this._meta = new MetaQuery()
       .list(this)
-      .query(meta);
+      .query(value);
 
     return this;
   }
@@ -202,8 +216,8 @@ export default class ServerList {
 
   change(action, diff, id, callback = () => {}) {
     const pageDiffs = {};
-    const pages = [...this._pages.values()];
-    const indices = [...this._pages.keys()];
+    const pages = Array.from(this._pages.values());
+    const indices = Array.from(this._pages.keys());
 
     eachOf(pages, (page, index, eachCallback) => {
       this._handleChange(pageDiffs, page, indices[index], eachCallback);

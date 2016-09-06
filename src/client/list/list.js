@@ -1,6 +1,6 @@
-import EventEmitter from 'events';
 import series from 'async/series';
 import eachOf from 'async/eachOf';
+import { EventEmitter } from '@scola/events';
 import MetaRequest from './request/meta';
 import ClientPage from './page';
 import applyDiff from '../../helper/apply-diff';
@@ -38,6 +38,10 @@ export default class ClientList extends EventEmitter {
   }
 
   destroy(cache) {
+    this._model.list({
+      id: this._id
+    }, 'delete');
+
     this._unbindConnection();
 
     this._pages.forEach((page) => {
@@ -50,87 +54,87 @@ export default class ClientList extends EventEmitter {
       this._cache.delete(this.key());
     }
 
-    if (this._subscribed) {
+    if (this._subscribed === true) {
       this.subscribe(false);
     }
   }
 
-  id(id) {
-    if (typeof id === 'undefined') {
+  id(value) {
+    if (typeof value === 'undefined') {
       return this._id;
     }
 
-    this._id = id;
+    this._id = value;
     return this;
   }
 
-  name(name) {
-    if (typeof name === 'undefined') {
+  name(value) {
+    if (typeof value === 'undefined') {
       return this._name;
     }
 
-    this._name = name;
+    this._name = value;
     return this;
   }
 
-  model(model) {
-    if (typeof model === 'undefined') {
+  model(value) {
+    if (typeof value === 'undefined') {
       return this._model;
     }
 
-    this._model = model;
+    this._model = value;
     return this;
   }
 
-  cache(cache) {
-    if (typeof cache === 'undefined') {
+  cache(value) {
+    if (typeof value === 'undefined') {
       return this._cache;
     }
 
-    this._cache = cache;
+    this._cache = value;
     return this;
   }
 
-  connection(connection) {
-    if (typeof connection === 'undefined') {
+  connection(value) {
+    if (typeof value === 'undefined') {
       return this._connection;
     }
 
-    this._connection = connection;
+    this._connection = value;
     this._bindConnection();
 
     return this;
   }
 
-  filter(filter) {
-    if (typeof filter === 'undefined') {
+  filter(value) {
+    if (typeof value === 'undefined') {
       return this._filter;
     }
 
-    this._filter = filter;
+    this._filter = value;
     return this;
   }
 
-  order(order) {
-    if (typeof order === 'undefined') {
+  order(value) {
+    if (typeof value === 'undefined') {
       return this._order;
     }
 
-    this._order = order;
+    this._order = value;
     return this;
   }
 
-  count(count) {
-    if (typeof count === 'undefined') {
+  count(value) {
+    if (typeof value === 'undefined') {
       return this._count;
     }
 
-    this._count = count;
+    this._count = value;
     return this;
   }
 
-  translate(translate) {
-    this._translate = translate;
+  translate(value) {
+    this._translate = value;
     return this;
   }
 
@@ -176,19 +180,19 @@ export default class ClientList extends EventEmitter {
     return this.path() + '/' + this._id;
   }
 
-  data(data, callback = () => {}) {
-    if (typeof data === 'function') {
-      this._cache.get(this.key(), data);
+  data(value, callback = () => {}) {
+    if (typeof value === 'function') {
+      this._cache.get(this.key(), value);
       return;
     }
 
-    this._cache.set(this.key(), data, (error) => {
+    this._cache.set(this.key(), value, (error) => {
       if (error) {
         callback(error);
         return;
       }
 
-      callback(null, data);
+      callback(null, value);
     });
   }
 
@@ -236,8 +240,8 @@ export default class ClientList extends EventEmitter {
   }
 
   change(action, diff, callback = () => {}) {
-    const pages = [...this._pages.values()];
-    const indices = [...this._pages.keys()];
+    const pages = Array.from(this._pages.values());
+    const indices = Array.from(this._pages.keys());
 
     eachOf(pages, (page, index, eachCallback) => {
       if (diff.pages[indices[index]]) {

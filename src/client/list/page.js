@@ -21,32 +21,32 @@ export default class ClientPage {
     }
   }
 
-  index(index) {
-    if (typeof index === 'undefined') {
+  index(value) {
+    if (typeof value === 'undefined') {
       return this._index;
     }
 
-    this._index = index;
+    this._index = value;
     return this;
   }
 
-  list(list) {
-    if (typeof list === 'undefined') {
+  list(value) {
+    if (typeof value === 'undefined') {
       return this._list;
     }
 
-    this._list = list;
+    this._list = value;
     this._bindConnection();
 
     return this;
   }
 
-  cache(cache) {
-    if (typeof cache === 'undefined') {
+  cache(value) {
+    if (typeof value === 'undefined') {
       return this._cache;
     }
 
-    this._cache = cache;
+    this._cache = value;
     return this;
   }
 
@@ -54,13 +54,13 @@ export default class ClientPage {
     return this._list.key() + '/' + this._index;
   }
 
-  data(data, callback = () => {}) {
-    if (typeof data === 'function') {
-      this._cache.get(this.key(), data);
+  data(value, callback = () => {}) {
+    if (typeof value === 'function') {
+      this._cache.get(this.key(), value);
       return;
     }
 
-    this._cache.set(this.key(), data, (error) => {
+    this._cache.set(this.key(), value, (error) => {
       if (error) {
         callback(error);
         return;

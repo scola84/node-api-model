@@ -1,5 +1,5 @@
 function set(value, diff) {
-  const path = [...diff.path];
+  const path = Array.from(diff.path);
   const end = path.pop();
 
   let target = value;

@@ -1,39 +1,36 @@
-import ClientList from './list';
+import ServerList from './list';
 
-export default class ClientListModel {
+export default class ServerListFactory {
   constructor() {
     this._name = null;
     this._model = null;
     this._cache = null;
-    this._connection = null;
+    this._meta = null;
+    this._total = null;
+    this._select = null;
 
-    this._translate = (f) => f;
+    this._authorize = (r, c) => c();
     this._filter = (f, c) => c();
     this._order = (o, c) => c();
   }
 
-  name(name) {
-    this._name = name;
+  name(value) {
+    this._name = value;
     return this;
   }
 
-  model(model) {
-    this._model = model;
+  model(value) {
+    this._model = value;
     return this;
   }
 
-  cache(cache) {
-    this._cache = cache;
+  cache(value) {
+    this._cache = value;
     return this;
   }
 
-  connection(connection) {
-    this._connection = connection;
-    return this;
-  }
-
-  translate(translate) {
-    this._translate = translate;
+  authorize(value) {
+    this._authorize = value;
     return this;
   }
 
@@ -44,15 +41,25 @@ export default class ClientListModel {
     return this;
   }
 
+  meta(value) {
+    this._meta = value;
+    return this;
+  }
+
+  select(value) {
+    this._select = value;
+    return this;
+  }
+
   create(id, params) {
-    return new ClientList()
+    return new ServerList()
       .id(id)
       .name(this._name)
       .model(this._model)
       .cache(this._cache)
-      .connection(this._connection)
-      .translate(this._translate)
       .validate(this._filter, this._order)
+      .meta(this._meta)
+      .select(this._select)
       .filter(params.filter)
       .order(params.order);
   }
