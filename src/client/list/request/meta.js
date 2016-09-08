@@ -33,7 +33,7 @@ export default class MetaRequest extends Request {
         order
       })
       .once('error', callback)
-      .end(null, (response) => {
+      .end('', (response) => {
         request.removeAllListeners();
         this._handleResponse(response, callback);
       });

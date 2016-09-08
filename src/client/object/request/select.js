@@ -22,7 +22,7 @@ export default class SelectRequest extends Request {
     const request = this._object.connection().request()
       .path(this._object.path())
       .once('error', callback)
-      .end(null, (response) => {
+      .end('', (response) => {
         request.removeAllListeners();
         this._handleResponse(response, callback);
       });

@@ -11,7 +11,7 @@ export default class DeleteRequest extends Request {
       .method('DELETE')
       .path(this._object.path())
       .once('error', callback)
-      .end(null, (response) => {
+      .end('', (response) => {
         request.removeAllListeners();
         this._handleResponse(response, callback);
       });

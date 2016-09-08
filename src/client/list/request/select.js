@@ -48,7 +48,7 @@ export default class SelectRequest extends Request {
         page: this._page.index()
       })
       .once('error', callback)
-      .end(null, (response) => {
+      .end('', (response) => {
         request.removeAllListeners();
         this._handleResponse(response, callback);
       });
