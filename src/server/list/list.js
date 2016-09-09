@@ -159,7 +159,16 @@ export default class ServerList {
 
   data(value, callback = () => {}) {
     if (typeof value === 'function') {
-      this._cache.get(this.path(), value);
+      callback = value;
+    }
+
+    if (!this._cache) {
+      callback();
+      return;
+    }
+
+    if (value === callback) {
+      this._cache.get(this.path(), callback);
       return;
     }
 
@@ -215,6 +224,11 @@ export default class ServerList {
   }
 
   change(action, diff, id, callback = () => {}) {
+    if (!this._cache) {
+      callback();
+      return;
+    }
+
     const pageDiffs = {};
     const pages = Array.from(this._pages.values());
     const indices = Array.from(this._pages.keys());
@@ -233,27 +247,6 @@ export default class ServerList {
       };
 
       this._changeMeta(action, diff, callback);
-    });
-  }
-
-  _changeMeta(action, diff, callback) {
-    this.meta().execute((error, cacheData) => {
-      if (error) {
-        callback(error);
-        return;
-      }
-
-      this.meta().execute((metaError, data) => {
-        if (metaError) {
-          callback(metaError);
-          return;
-        }
-
-        diff.meta = odiff(cacheData, data);
-
-        this.notifyClients(action, diff);
-        callback(null, diff);
-      }, true);
     });
   }
 
@@ -313,6 +306,27 @@ export default class ServerList {
       }
 
       callback();
+    });
+  }
+
+  _changeMeta(action, diff, callback) {
+    this.meta().execute((error, cacheData) => {
+      if (error) {
+        callback(error);
+        return;
+      }
+
+      this.meta().execute((metaError, data) => {
+        if (metaError) {
+          callback(metaError);
+          return;
+        }
+
+        diff.meta = odiff(cacheData, data);
+
+        this.notifyClients(action, diff);
+        callback(null, diff);
+      }, true);
     });
   }
 }

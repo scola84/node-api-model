@@ -12,7 +12,7 @@ export default class ServerPage {
   destroy(cache) {
     this._list.page(this._index, false);
 
-    if (cache === true) {
+    if (cache === true && this._cache) {
       this._cache.delete(this.path());
     }
   }
@@ -50,7 +50,16 @@ export default class ServerPage {
 
   data(value, callback = () => {}) {
     if (typeof value === 'function') {
-      this._cache.get(this.path(), value);
+      callback = value;
+    }
+
+    if (!this._cache) {
+      callback();
+      return;
+    }
+
+    if (value === callback) {
+      this._cache.get(this.path(), callback);
       return;
     }
 
@@ -78,6 +87,11 @@ export default class ServerPage {
   }
 
   change(callback) {
+    if (!this._cache) {
+      callback();
+      return;
+    }
+
     this._cache.get(this.path(), (error, cacheData) => {
       if (error) {
         callback(error);
