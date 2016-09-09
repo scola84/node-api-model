@@ -169,6 +169,11 @@ export default class ClientObject extends EventEmitter {
     return this._delete;
   }
 
+  fetch(callback) {
+    this.select().execute(callback, true);
+    return this;
+  }
+
   change(action, diff, callback = () => {}) {
     if (action === 'update') {
       this._changeUpdate(diff, callback);

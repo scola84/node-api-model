@@ -239,6 +239,23 @@ export default class ClientList extends EventEmitter {
     return this._pages.get(index);
   }
 
+  fetch(callback = () => {}) {
+    this.meta().execute((error) => {
+      if (error) {
+        callback(error);
+        return;
+      }
+
+      const pages = Array.from(this._pages.values());
+
+      eachOf(pages, (page, index, eachCallback) => {
+        page.fetch(eachCallback);
+      }, callback);
+    }, true);
+
+    return this;
+  }
+
   change(action, diff, callback = () => {}) {
     const pages = Array.from(this._pages.values());
     const indices = Array.from(this._pages.keys());

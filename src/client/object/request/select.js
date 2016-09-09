@@ -21,8 +21,15 @@ export default class SelectRequest extends Request {
   _request(callback) {
     const request = this._object.connection().request()
       .path(this._object.path())
-      .once('error', callback)
+      .once('error', (error) => {
+        request.removeAllListeners();
+        callback(new ScolaError('000 invalid_request ' + error.message));
+      })
       .end('', (response) => {
+        if (response.status() === 0) {
+          return;
+        }
+
         request.removeAllListeners();
         this._handleResponse(response, callback);
       });

@@ -32,8 +32,15 @@ export default class UpdateRequest extends Request {
     const request = this._object.connection().request()
       .method('PUT')
       .path(this._object.path())
-      .once('error', callback)
+      .once('error', (error) => {
+        request.removeAllListeners();
+        callback(new ScolaError('000 invalid_request ' + error.message));
+      })
       .end(data, (response) => {
+        if (response.status() === 0) {
+          return;
+        }
+
         request.removeAllListeners();
         this._handleResponse(response, callback);
       });

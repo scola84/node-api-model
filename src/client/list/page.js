@@ -80,6 +80,11 @@ export default class ClientPage {
     return this._select;
   }
 
+  fetch(callback) {
+    this.select().execute(callback, true);
+    return this;
+  }
+
   change(action, diff, callback = () => {}) {
     if (diff === false) {
       this.destroy(true);
