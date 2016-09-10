@@ -35,15 +35,16 @@ export default class MetaRequest extends Request {
       .once('error', (error) => {
         request.removeAllListeners();
         callback(new ScolaError('000 invalid_request ' + error.message));
-      })
-      .end('', (response) => {
-        if (response.status() === 0) {
-          return;
-        }
-
-        request.removeAllListeners();
-        this._handleResponse(response, callback);
       });
+
+    request.end('', (response) => {
+      if (response.status() === 0) {
+        return;
+      }
+
+      request.removeAllListeners();
+      this._handleResponse(response, callback);
+    });
   }
 
   _handleResponse(response, callback) {
