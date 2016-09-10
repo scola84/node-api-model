@@ -80,6 +80,12 @@ export default class SelectRequest extends Request {
       return;
     }
 
+    if (data.length === 0) {
+      this._page.destroy(true);
+      callback(null, data, this._page);
+      return;
+    }
+
     this._page.data(data, (error) => {
       callback(error, data, this._page);
     });

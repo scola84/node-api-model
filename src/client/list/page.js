@@ -97,6 +97,7 @@ export default class ClientPage {
   change(action, diff, callback = () => {}) {
     if (diff === false) {
       this.destroy(true);
+      callback();
       return;
     }
 
