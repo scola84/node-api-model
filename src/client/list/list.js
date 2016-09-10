@@ -50,7 +50,7 @@ export default class ClientList extends EventEmitter {
 
     this._pages.clear();
 
-    if (cache === true) {
+    if (cache === true && this._cache) {
       this._cache.delete(this.key());
     }
 
@@ -182,6 +182,15 @@ export default class ClientList extends EventEmitter {
 
   data(value, callback = () => {}) {
     if (typeof value === 'function') {
+      callback = value;
+    }
+
+    if (!this._cache) {
+      callback();
+      return;
+    }
+
+    if (value === callback) {
       this._cache.get(this.key(), value);
       return;
     }
@@ -257,6 +266,11 @@ export default class ClientList extends EventEmitter {
   }
 
   change(action, diff, callback = () => {}) {
+    if (!this._cache) {
+      callback();
+      return;
+    }
+
     const pages = Array.from(this._pages.values());
     const indices = Array.from(this._pages.keys());
 

@@ -38,7 +38,7 @@ export default class ClientObject extends EventEmitter {
       this.subscribe(false);
     }
 
-    if (cache === true) {
+    if (cache === true && this._cache) {
       this._cache.delete(this.path());
     }
   }
@@ -105,6 +105,15 @@ export default class ClientObject extends EventEmitter {
 
   data(value, callback = () => {}) {
     if (typeof value === 'function') {
+      callback = value;
+    }
+
+    if (!this._cache) {
+      callback();
+      return;
+    }
+
+    if (value === callback) {
       this._cache.get(this.path(), value);
       return;
     }
@@ -197,6 +206,11 @@ export default class ClientObject extends EventEmitter {
   }
 
   _changeUpdate(diff, callback) {
+    if (!this._cache) {
+      callback();
+      return;
+    }
+
     this._cache.get(this.path(), (error, data) => {
       if (error) {
         callback(error);

@@ -16,7 +16,7 @@ export default class ClientPage {
 
     this._list.page(this._index, false);
 
-    if (cache === true) {
+    if (cache === true && this._cache) {
       this._cache.delete(this.key());
     }
   }
@@ -56,6 +56,15 @@ export default class ClientPage {
 
   data(value, callback = () => {}) {
     if (typeof value === 'function') {
+      callback = value;
+    }
+
+    if (!this._cache) {
+      callback();
+      return;
+    }
+
+    if (value === callback) {
       this._cache.get(this.key(), value);
       return;
     }
@@ -88,6 +97,11 @@ export default class ClientPage {
   change(action, diff, callback = () => {}) {
     if (diff === false) {
       this.destroy(true);
+      return;
+    }
+
+    if (!this._cache) {
+      callback();
       return;
     }
 
