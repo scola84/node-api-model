@@ -1,41 +1,17 @@
-export default function pubsubRoutes(router) {
-  const connections = {};
-
+export default function pubsubRoutes(router, pubsub) {
   router.sub('/:name', (request, response, next) => {
-    const name = request.param('name');
-    connections[name] = connections[name] || new Set();
-
     request.once('data', (action) => {
-      if (action === true) {
-        connections[name].add(request.connection());
-
-        request.connection().once('close', () => {
-          connections[name].delete(request.connection());
-        });
-      } else if (action === false) {
-        connections[name].delete(request.connection());
-      }
+      pubsub.subscribe(request.param('name'), request.connection(),
+        action);
     });
 
     next();
   });
 
   router.pub('/:name/:id', (request, response, next) => {
-    const name = request.param('name');
-    connections[name] = connections[name] || new Set();
-
-    if (!connections[name].has(request.connection())) {
-      return;
-    }
-
     request.once('data', (data) => {
-      connections[name].forEach((connection) => {
-        connection.request()
-          .method('PUB')
-          .path(request.path())
-          .once('error', () => {})
-          .end(data);
-      });
+      pubsub.publish(request.param('name'), request.connection(),
+        request.path(), data);
     });
 
     next();
