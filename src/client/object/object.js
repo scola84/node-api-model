@@ -249,7 +249,7 @@ export default class ClientObject extends EventEmitter {
     callback(null, diff);
   }
 
-  _open() {
+  _open(event) {
     this.select().execute((error) => {
       if (error) {
         return;
@@ -258,6 +258,8 @@ export default class ClientObject extends EventEmitter {
       if (this._subscribed) {
         this.subscribe(true);
       }
+
+      this.emit('open', event);
     }, true);
   }
 }

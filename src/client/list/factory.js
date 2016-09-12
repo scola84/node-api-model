@@ -1,6 +1,6 @@
 import ClientList from './list';
 
-export default class ClientListModel {
+export default class ClientListFactory {
   constructor() {
     this._name = null;
     this._model = null;

@@ -300,7 +300,7 @@ export default class ClientList extends EventEmitter {
     this._connection.removeListener('open', this._handleOpen);
   }
 
-  _open() {
+  _open(event) {
     this.meta().execute((error) => {
       if (error) {
         return;
@@ -309,6 +309,8 @@ export default class ClientList extends EventEmitter {
       if (this._subscribed) {
         this.subscribe(true);
       }
+
+      this.emit('open', event);
     }, true);
   }
 

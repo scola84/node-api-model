@@ -1,6 +1,6 @@
 import ClientObject from './object';
 
-export default class ClientObjectModel {
+export default class ClientObjectFactory {
   constructor() {
     this._name = null;
     this._model = null;
