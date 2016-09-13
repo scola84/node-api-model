@@ -1,21 +1,23 @@
 {
   "name": "@scola/api-model",
   "version": "0.0.0",
-  "description": "Model API",
+  "description": "API Model",
   "repository": "github:scola84/node-api-model",
   "author": "M.C. van den Boogaart <scola@kvdb.name>",
   "license": "MIT",
   "main": "./dist/api-model.js",
   "jsnext:main": "index.js",
-  "devDependencies": {
-    "rollup": "^0.34.13"
-  },
-  "scripts": {
-    "build": "rollup -i index.js -o ./dist/api-model.js -f cjs"
-  },
   "dependencies": {
+    "@scola/error": "^4.0.0",
+    "@scola/events": "^3.0.0",
     "async": "^2.0.1",
     "odiff": "0.0.2",
     "sha1": "^1.1.1"
+  },
+  "devDependencies": {
+    "rollup": "^0.35.9"
+  },
+  "scripts": {
+    "build": "rollup -i index.js -o ./dist/api-model.js -f cjs"
   }
 }
