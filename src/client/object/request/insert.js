@@ -54,7 +54,12 @@ export default class InsertRequest extends Request {
       return;
     }
 
-    const id = response.header('id');
+    const id = response.header('x-put-id');
+
+    if (!id) {
+      callback();
+      return;
+    }
 
     this._object
       .id(id)

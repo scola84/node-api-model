@@ -42,6 +42,11 @@ export default class InsertQuery extends Query {
       return;
     }
 
+    if (!id) {
+      callback();
+      return;
+    }
+
     this._object
       .id(id)
       .data(data, (objectError) => {
