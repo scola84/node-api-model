@@ -275,7 +275,7 @@ export default class ClientList extends EventEmitter {
     const indices = Array.from(this._pages.keys());
 
     eachOf(pages, (page, index, eachCallback) => {
-      if (diff.pages[indices[index]]) {
+      if (typeof diff.pages[indices[index]] !== 'undefined') {
         page.change(action, diff.pages[indices[index]], eachCallback);
       } else {
         eachCallback();
