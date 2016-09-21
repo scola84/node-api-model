@@ -13,7 +13,7 @@ export default class PubSub {
         this.subscribe(name, connection, false);
       });
     } else if (action === false) {
-      this._connection[name].delete(connection);
+      this._connections[name].delete(connection);
     }
 
     return this;
