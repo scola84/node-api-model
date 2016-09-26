@@ -1,3 +1,4 @@
+import { StringDecoder } from 'string_decoder';
 import { ScolaError } from '@scola/error';
 import Request from '../request';
 
@@ -50,7 +51,7 @@ export default class SelectRequest extends Request {
 
   _handleData(data, response, callback) {
     if (response.status() !== 200) {
-      callback(new ScolaError(data));
+      callback(new ScolaError(new StringDecoder().write(data)));
       return;
     }
 
