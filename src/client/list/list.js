@@ -1,6 +1,6 @@
 import series from 'async/series';
 import eachOf from 'async/eachOf';
-import { EventEmitter } from '@scola/events';
+import { EventEmitter } from 'events';
 import MetaRequest from './request/meta';
 import ClientPage from './page';
 import applyDiff from '../../helper/apply-diff';

@@ -1,4 +1,4 @@
-import { EventEmitter } from '@scola/events';
+import { EventEmitter } from 'events';
 import SelectRequest from './request/select';
 import InsertRequest from './request/insert';
 import UpdateRequest from './request/update';
