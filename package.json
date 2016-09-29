@@ -1,6 +1,6 @@
 {
   "name": "@scola/api-model",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "API Model",
   "repository": "github:scola84/node-api-model",
   "author": "M.C. van den Boogaart <scola@kvdb.name>",
