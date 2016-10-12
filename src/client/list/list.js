@@ -301,6 +301,10 @@ export default class ClientList extends EventEmitter {
   }
 
   _open(event) {
+    if (!this._meta) {
+      return;
+    }
+
     this.meta().execute((error) => {
       if (error) {
         return;

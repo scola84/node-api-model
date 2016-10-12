@@ -250,6 +250,10 @@ export default class ClientObject extends EventEmitter {
   }
 
   _open(event) {
+    if (!this._select) {
+      return;
+    }
+
     this.select().execute((error) => {
       if (error) {
         return;

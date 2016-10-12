@@ -130,6 +130,10 @@ export default class ClientPage {
   }
 
   _open() {
+    if (!this._select) {
+      return;
+    }
+
     this.select().execute(() => {}, true);
   }
 }
