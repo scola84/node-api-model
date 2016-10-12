@@ -43,7 +43,7 @@ export default class InsertQuery extends Query {
     }
 
     if (!id) {
-      callback();
+      callback(null, data);
       return;
     }
 
