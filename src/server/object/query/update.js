@@ -43,7 +43,7 @@ export default class UpdateQuery extends Query {
 
   _handleValidate(error, changed, diff, request, callback) {
     if (error) {
-      callback(new ScolaError('400 invalid_input ' + error.message));
+      callback(ScolaError.fromError(error, '400 invalid_input'));
       return;
     }
 
@@ -54,7 +54,7 @@ export default class UpdateQuery extends Query {
 
   _handleQuery(error, changed, diff, callback) {
     if (error) {
-      callback(new ScolaError('500 invalid_query ' + error.message));
+      callback(ScolaError.fromError(error, '500 invalid_query'));
       return;
     }
 

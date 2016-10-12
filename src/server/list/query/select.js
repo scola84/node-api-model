@@ -30,7 +30,7 @@ export default class SelectQuery extends Query {
 
       this._list.query((listError, filter, order) => {
         if (listError) {
-          callback(new ScolaError('400 invalid_input ' + listError.message));
+          callback(ScolaError.fromError(error, '400 invalid_input'));
           return;
         }
 
@@ -48,7 +48,7 @@ export default class SelectQuery extends Query {
 
   _handleQuery(error, data, callback) {
     if (error) {
-      callback(new ScolaError('500 invalid_query ' + error.message));
+      callback(ScolaError.fromError(error, '500 invalid_query'));
       return;
     }
 

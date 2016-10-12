@@ -27,7 +27,7 @@ export default class InsertQuery extends Query {
 
   _handleValidate(error, data, request, callback) {
     if (error) {
-      callback(new ScolaError('400 invalid_input ' + error.message));
+      callback(ScolaError.fromError(error, '400 invalid_input'));
       return;
     }
 
@@ -38,7 +38,7 @@ export default class InsertQuery extends Query {
 
   _handleQuery(error, id, data, callback) {
     if (error) {
-      callback(new ScolaError('500 invalid_query ' + error.message));
+      callback(ScolaError.fromError(error, '500 invalid_query'));
       return;
     }
 

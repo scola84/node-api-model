@@ -10,7 +10,7 @@ export default class DeleteQuery extends Query {
 
   _handleQuery(error, callback) {
     if (error) {
-      callback(new ScolaError('500 invalid_query ' + error.message));
+      callback(ScolaError.fromError(error, '500 invalid_query'));
       return;
     }
 
