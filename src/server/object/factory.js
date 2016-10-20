@@ -7,8 +7,8 @@ export default class ServerObjectFactory {
     this._cache = null;
     this._connection = null;
 
-    this._authorize = (r, c) => c();
-    this._validate = (r, d, c) => c();
+    this._authorize = (d, r, c) => c();
+    this._validate = (d, r, c) => c();
 
     this._select = null;
     this._insert = null;

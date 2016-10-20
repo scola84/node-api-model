@@ -13,6 +13,7 @@ export default class ServerList {
     this._model = null;
     this._cache = null;
 
+    this._authorize = null;
     this._validateFilter = null;
     this._validateOrder = null;
 
@@ -119,14 +120,27 @@ export default class ServerList {
     return this;
   }
 
+  authorize(value) {
+    if (typeof value === 'undefined') {
+      return this._authorize;
+    }
+
+    this._authorize = value;
+    return this;
+  }
+
   validate(filter, order) {
+    if (typeof filter === 'undefined') {
+      return [this._validateFilter, this._validateOrder];
+    }
+
     this._validateFilter = filter;
     this._validateOrder = order;
 
     return this;
   }
 
-  query(callback) {
+  query(request, callback) {
     if (this._query) {
       callback(null, this._query.filter, this._query.order);
       return;
@@ -136,8 +150,8 @@ export default class ServerList {
     const order = parseOrder(this._order);
 
     series([
-      (asyncCallback) => this._validateFilter(filter, asyncCallback),
-      (asyncCallback) => this._validateOrder(order, asyncCallback)
+      (asyncCallback) => this._validateFilter(filter, request, asyncCallback),
+      (asyncCallback) => this._validateOrder(order, request, asyncCallback)
     ], (error) => {
       if (error) {
         callback(error);
@@ -199,7 +213,8 @@ export default class ServerList {
 
     this._meta = new MetaQuery()
       .list(this)
-      .query(value);
+      .query(value)
+      .authorize(this._authorize);
 
     return this;
   }
@@ -217,6 +232,7 @@ export default class ServerList {
         .index(index)
         .list(this)
         .cache(this._cache)
+        .authorize(this._authorize)
         .select(this._select));
     }
 

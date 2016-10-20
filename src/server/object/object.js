@@ -151,7 +151,8 @@ export default class ServerObject {
     if (typeof query === 'function') {
       this._select = new SelectQuery()
         .object(this)
-        .query(query);
+        .query(query)
+        .authorize(this._authorize);
     }
 
     return this;
@@ -166,6 +167,7 @@ export default class ServerObject {
       this._insert = new InsertQuery()
         .object(this)
         .query(query)
+        .authorize(this._authorize)
         .validate(this._validate);
     }
 
@@ -181,6 +183,7 @@ export default class ServerObject {
       this._update = new UpdateQuery()
         .object(this)
         .query(query)
+        .authorize(this._authorize)
         .validate(this._validate);
     }
 
@@ -195,7 +198,8 @@ export default class ServerObject {
     if (typeof query === 'function') {
       this._delete = new DeleteQuery()
         .object(this)
-        .query(query);
+        .query(query)
+        .authorize(this._authorize);
     }
 
     return this;

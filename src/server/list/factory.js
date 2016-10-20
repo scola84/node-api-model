@@ -9,9 +9,9 @@ export default class ServerListFactory {
     this._total = null;
     this._select = null;
 
-    this._authorize = (r, c) => c();
-    this._filter = (f, c) => c();
-    this._order = (o, c) => c();
+    this._authorize = (f, o, l, r, c) => c();
+    this._filter = (f, r, c) => c();
+    this._order = (o, r, c) => c();
   }
 
   name(value) {
@@ -57,6 +57,7 @@ export default class ServerListFactory {
       .name(this._name)
       .model(this._model)
       .cache(this._cache)
+      .authorize(this._authorize)
       .validate(this._filter, this._order)
       .meta(this._meta)
       .select(this._select)

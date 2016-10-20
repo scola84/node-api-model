@@ -12,44 +12,55 @@ export default class InsertQuery extends Query {
     });
   }
 
-  _handleError(error, request, callback) {
+  _handleError(requestError, request, callback) {
     request.removeAllListeners();
-    callback(new ScolaError('400 invalid_request ' + error.message));
+    callback(ScolaError.fromError(requestError, '400 invalid_request'));
   }
 
   _handleData(data, request, callback) {
     request.removeAllListeners();
 
-    this._validate(data, request, (error) => {
-      this._handleValidate(error, data, request, callback);
+    this._validate(data, request, (validatorError) => {
+      this._handleValidate(validatorError, data, request, callback);
     });
   }
 
-  _handleValidate(error, data, request, callback) {
-    if (error) {
-      callback(ScolaError.fromError(error, '400 invalid_input'));
+  _handleValidate(validatorError, data, request, callback) {
+    if (validatorError) {
+      callback(ScolaError.fromError(validatorError, '400 invalid_input'));
       return;
     }
 
-    this._query(data, request, (queryError, id) => {
-      this._handleQuery(queryError, id, data, callback);
+    this._authorize(data, request, (authError) => {
+      this._handleAuthorize(authError, data, request, callback);
     });
   }
 
-  _handleQuery(error, id, data, callback) {
-    if (error) {
-      callback(ScolaError.fromError(error, '500 invalid_query'));
+  _handleAuthorize(authError, data, request, callback) {
+    if (authError) {
+      callback(ScolaError.fromError(authError, '401 invalid_auth'));
+      return;
+    }
+
+    this._query(data, request, (queryError, queryData, id) => {
+      this._handleQuery(queryError, queryData, id, callback);
+    });
+  }
+
+  _handleQuery(queryError, queryData, id, callback) {
+    if (queryError) {
+      callback(ScolaError.fromError(queryError, '500 invalid_query'));
       return;
     }
 
     if (!id) {
-      callback(null, data);
+      callback(null, queryData);
       return;
     }
 
     this._object
       .id(id)
-      .data(data, (objectError) => {
+      .data(queryData, (objectError) => {
         if (objectError) {
           callback(objectError);
           return;
@@ -61,7 +72,7 @@ export default class InsertQuery extends Query {
         }, 'insert');
 
         this._object.notifyPeers('insert');
-        callback(null, data, this._object);
+        callback(null, queryData, this._object);
       });
   }
 }

@@ -2,6 +2,7 @@ export default class Query {
   constructor() {
     this._object = null;
     this._query = null;
+    this._authorize = null;
     this._validate = null;
   }
 
@@ -12,6 +13,11 @@ export default class Query {
 
   query(value) {
     this._query = value;
+    return this;
+  }
+
+  authorize(value) {
+    this._authorize = value;
     return this;
   }
 

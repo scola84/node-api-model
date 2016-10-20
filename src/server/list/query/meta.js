@@ -12,39 +12,47 @@ export default class MetaQuery extends Query {
     return this;
   }
 
-  execute(callback, force) {
-    this._list.data((error, data) => {
-      if (error) {
-        callback(error);
+  execute(request, callback, force) {
+    this._list.query(request, (listError, filter, order) => {
+      if (listError) {
+        callback(ScolaError.fromError(listError, '400 invalid_input'));
         return;
       }
 
-      if (data && force !== true) {
-        callback(null, data, this._list);
-        return;
-      }
-
-      this._list.query((listError, filter, order) => {
-        if (listError) {
-          callback(ScolaError.fromError(listError, '400 invalid_input'));
+      this._authorize(filter, order, request, (authError) => {
+        if (authError) {
+          callback(ScolaError.fromError(authError, '401 invalid_auth'));
           return;
         }
 
-        this._query(filter, order, (queryError, queryData) => {
-          this._handleQuery(queryError, queryData, callback);
+        this._list.data((cacheError, cacheData) => {
+          if (cacheError) {
+            callback(cacheError);
+            return;
+          }
+
+          if (cacheData && force !== true) {
+            callback(null, cacheData, this._list);
+            return;
+          }
+
+          this._query(filter, order, request, (queryError, queryData) => {
+            this._handleQuery(queryError, queryData, filter, order,
+              request, callback);
+          });
         });
       });
     });
   }
 
-  _handleQuery(error, data, callback) {
-    if (error) {
-      callback(ScolaError.fromError(error, '500 invalid_query'));
+  _handleQuery(queryError, queryData, filter, order, request, callback) {
+    if (queryError) {
+      callback(ScolaError.fromError(queryError, '500 invalid_query'));
       return;
     }
 
-    this._list.data(data, (listError) => {
-      callback(listError, data, this._list);
+    this._list.data(queryData, (listError) => {
+      callback(listError, queryData, this._list);
     });
   }
 }

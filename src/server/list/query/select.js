@@ -16,50 +16,58 @@ export default class SelectQuery extends Query {
     return this;
   }
 
-  execute(callback, force) {
-    this._page.data((error, data) => {
-      if (error) {
-        callback(error);
+  execute(request, callback, force) {
+    this._list.query(request, (listError, filter, order) => {
+      if (listError) {
+        callback(ScolaError.fromError(listError, '400 invalid_input'));
         return;
       }
 
-      if (data && force !== true) {
-        callback(null, data, this._page);
-        return;
-      }
-
-      this._list.query((listError, filter, order) => {
-        if (listError) {
-          callback(ScolaError.fromError(error, '400 invalid_input'));
+      this._authorize(filter, order, request, (authError) => {
+        if (authError) {
+          callback(ScolaError.fromError(authError, '401 invalid_auth'));
           return;
         }
 
-        const limit = {
-          offset: this._page.index() * this._list.count(),
-          count: this._list.count()
-        };
+        this._page.data((cacheError, cacheData) => {
+          if (cacheError) {
+            callback(cacheError);
+            return;
+          }
 
-        this._query(filter, order, limit, (queryError, queryData) => {
-          this._handleQuery(queryError, queryData, callback);
+          if (cacheData && force !== true) {
+            callback(null, cacheData, this._page);
+            return;
+          }
+
+          const limit = {
+            offset: this._page.index() * this._list.count(),
+            count: this._list.count()
+          };
+
+          this._query(filter, order, limit, request, (queryError, queryData) => {
+            this._handleQuery(queryError, queryData, filter, order, limit,
+              request, callback);
+          });
         });
       });
     });
   }
 
-  _handleQuery(error, data, callback) {
-    if (error) {
-      callback(ScolaError.fromError(error, '500 invalid_query'));
+  _handleQuery(queryError, queryData, filter, order, limit, request, callback) {
+    if (queryError) {
+      callback(ScolaError.fromError(queryError, '500 invalid_query'));
       return;
     }
 
-    if (data.length === 0) {
+    if (queryData.length === 0) {
       this._page.destroy(true);
-      callback(null, data, this._page);
+      callback(null, queryData, this._page);
       return;
     }
 
-    this._page.data(data, (pageError) => {
-      callback(pageError, data, this._page);
+    this._page.data(queryData, (pageError) => {
+      callback(pageError, queryData, this._page);
     });
   }
 }
