@@ -326,13 +326,13 @@ export default class ServerList {
   }
 
   _changeMeta(action, diff, callback) {
-    this.meta().execute((error, cacheData) => {
+    this.meta().request(null, (error, cacheData) => {
       if (error) {
         callback(error);
         return;
       }
 
-      this.meta().execute((metaError, data) => {
+      this.meta().request(null, (metaError, data) => {
         if (metaError) {
           callback(metaError);
           return;

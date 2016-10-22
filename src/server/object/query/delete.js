@@ -2,15 +2,15 @@ import { ScolaError } from '@scola/error';
 import Query from '../query';
 
 export default class DeleteQuery extends Query {
-  execute(request, callback = () => {}) {
+  request(value, callback = () => {}) {
     this._object.data((objectError, cacheData) => {
       if (objectError) {
         callback(objectError);
         return;
       }
 
-      this._authorize(cacheData, request, (authError) => {
-        this._handleAuthorize(authError, cacheData, request, callback);
+      this._authorize(cacheData, value, (authError) => {
+        this._handleAuthorize(authError, cacheData, value, callback);
       });
     });
   }

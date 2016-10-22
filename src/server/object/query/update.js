@@ -3,14 +3,18 @@ import { ScolaError } from '@scola/error';
 import Query from '../query';
 
 export default class UpdateQuery extends Query {
-  execute(request, callback = () => {}) {
-    request.once('data', (data) => {
-      this._handleData(data, request, callback);
+  request(value, callback = () => {}) {
+    value.once('data', (data) => {
+      this._handleData(data, value, callback);
     });
 
-    request.once('error', (error) => {
-      this._handleError(error, request, callback);
+    value.once('error', (error) => {
+      this._handleError(error, value, callback);
     });
+  }
+
+  data(value, request, callback = () => {}) {
+    this._handleData(value, request, callback);
   }
 
   _handleError(requestError, request, callback) {

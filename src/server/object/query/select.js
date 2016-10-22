@@ -2,7 +2,7 @@ import { ScolaError } from '@scola/error';
 import Query from '../query';
 
 export default class SelectQuery extends Query {
-  execute(request, callback) {
+  request(value, callback) {
     this._object.data((objectError, cacheData) => {
       if (objectError) {
         callback(objectError);
@@ -10,7 +10,7 @@ export default class SelectQuery extends Query {
       }
 
       if (cacheData) {
-        this._authorize(cacheData, request, (authError) => {
+        this._authorize(cacheData, value, (authError) => {
           if (authError) {
             callback(ScolaError.fromError(authError, '401 invalid_auth'));
             return;
@@ -22,8 +22,8 @@ export default class SelectQuery extends Query {
         return;
       }
 
-      this._query(request, (queryError, queryData) => {
-        this._handleQuery(queryError, queryData, request, callback);
+      this._query(value, (queryError, queryData) => {
+        this._handleQuery(queryError, queryData, value, callback);
       });
     });
   }

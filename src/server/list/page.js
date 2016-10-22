@@ -109,7 +109,7 @@ export default class ServerPage {
         return;
       }
 
-      this.select().execute((queryError, data) => {
+      this.select().request(null, (queryError, data) => {
         if (queryError) {
           callback(queryError);
           return;
