@@ -7,7 +7,7 @@ function end(field, value, fields) {
   return fields;
 }
 
-export default function parseFilter(filter, translate) {
+export default function parseFilter(filter = '', translate = null) {
   let fields = {};
   let field = '';
   let value = '';

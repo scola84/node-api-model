@@ -16,37 +16,13 @@ export default class SelectQuery extends Query {
     return this;
   }
 
-  request(value, callback, force) {
-    this._list.query(value, (listError, filter, order) => {
-      if (listError) {
-        callback(ScolaError.fromError(listError, '400 invalid_input'));
-        return;
-      }
-
-      if (value === null) {
-        this._page.data((cacheError, cacheData) => {
-          this._handleData(cacheError, cacheData, filter, order, value,
-            callback, force);
-        });
-
-        return;
-      }
-
-      this._authorize(filter, order, value, (authError) => {
-        if (authError) {
-          callback(ScolaError.fromError(authError, '401 invalid_auth'));
-          return;
-        }
-
-        this._page.data((cacheError, cacheData) => {
-          this._handleData(cacheError, cacheData, filter, order, value,
-            callback, force);
-        });
-      });
+  execute(request, callback, force) {
+    this._page.data((cacheError, cacheData) => {
+      this._handleData(cacheError, cacheData, callback, force);
     });
   }
 
-  _handleData(cacheError, cacheData, filter, order, request, callback, force) {
+  _handleData(cacheError, cacheData, callback, force) {
     if (cacheError) {
       callback(cacheError);
       return;
@@ -57,18 +33,20 @@ export default class SelectQuery extends Query {
       return;
     }
 
+    const filter = this._list.filter();
+    const order = this._list.order();
+
     const limit = {
       offset: this._page.index() * this._list.count(),
       count: this._list.count()
     };
 
-    this._query(filter, order, limit, request, (queryError, queryData) => {
-      this._handleQuery(queryError, queryData, filter, order, limit,
-        request, callback);
+    this._query(filter, order, limit, (queryError, queryData) => {
+      this._handleQuery(queryError, queryData, callback);
     });
   }
 
-  _handleQuery(queryError, queryData, filter, order, limit, request, callback) {
+  _handleQuery(queryError, queryData, callback) {
     if (queryError) {
       callback(ScolaError.fromError(queryError, '500 invalid_query'));
       return;

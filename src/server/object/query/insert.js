@@ -2,51 +2,8 @@ import { ScolaError } from '@scola/error';
 import Query from '../query';
 
 export default class InsertQuery extends Query {
-  request(value, callback = () => {}) {
-    value.once('data', (data) => {
-      this._handleData(data, value, callback);
-    });
-
-    value.once('error', (error) => {
-      this._handleError(error, value, callback);
-    });
-  }
-
-  data(value, request, callback = () => {}) {
-    this._handleData(value, request, callback);
-  }
-
-  _handleError(requestError, request, callback) {
-    request.removeAllListeners();
-    callback(ScolaError.fromError(requestError, '400 invalid_request'));
-  }
-
-  _handleData(data, request, callback) {
-    request.removeAllListeners();
-
-    this._validate(data, request, (validatorError) => {
-      this._handleValidate(validatorError, data, request, callback);
-    });
-  }
-
-  _handleValidate(validatorError, data, request, callback) {
-    if (validatorError) {
-      callback(ScolaError.fromError(validatorError, '400 invalid_input'));
-      return;
-    }
-
-    this._authorize(data, request, (authError) => {
-      this._handleAuthorize(authError, data, request, callback);
-    });
-  }
-
-  _handleAuthorize(authError, data, request, callback) {
-    if (authError) {
-      callback(ScolaError.fromError(authError, '401 invalid_auth'));
-      return;
-    }
-
-    this._query(data, request, (queryError, queryData, id) => {
+  execute(request, callback = () => {}) {
+    this._query(request, (queryError, queryData, id) => {
       this._handleQuery(queryError, queryData, id, callback);
     });
   }

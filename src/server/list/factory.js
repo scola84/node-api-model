@@ -8,10 +8,6 @@ export default class ServerListFactory {
     this._meta = null;
     this._total = null;
     this._select = null;
-
-    this._authorize = (f, o, l, r, c) => c();
-    this._filter = (f, r, c) => c();
-    this._order = (o, r, c) => c();
   }
 
   name(value) {
@@ -26,18 +22,6 @@ export default class ServerListFactory {
 
   cache(value) {
     this._cache = value;
-    return this;
-  }
-
-  authorize(value) {
-    this._authorize = value;
-    return this;
-  }
-
-  validate(filter, order) {
-    this._filter = filter;
-    this._order = order;
-
     return this;
   }
 
@@ -57,8 +41,6 @@ export default class ServerListFactory {
       .name(this._name)
       .model(this._model)
       .cache(this._cache)
-      .authorize(this._authorize)
-      .validate(this._filter, this._order)
       .meta(this._meta)
       .select(this._select)
       .filter(params.filter)

@@ -13,9 +13,6 @@ export default class ServerObject {
     this._cache = null;
     this._connection = null;
 
-    this._authorize = null;
-    this._validate = null;
-
     this._select = null;
     this._insert = null;
     this._update = null;
@@ -86,24 +83,6 @@ export default class ServerObject {
     return this;
   }
 
-  authorize(value) {
-    if (typeof value === 'undefined') {
-      return this._authorize;
-    }
-
-    this._authorize = value;
-    return this;
-  }
-
-  validate(value) {
-    if (typeof value === 'undefined') {
-      return this._validate;
-    }
-
-    this._validate = value;
-    return this;
-  }
-
   path() {
     return '/' + this._name + '/' + this._id;
   }
@@ -151,8 +130,7 @@ export default class ServerObject {
     if (typeof query === 'function') {
       this._select = new SelectQuery()
         .object(this)
-        .query(query)
-        .authorize(this._authorize);
+        .query(query);
     }
 
     return this;
@@ -166,9 +144,7 @@ export default class ServerObject {
     if (typeof query === 'function') {
       this._insert = new InsertQuery()
         .object(this)
-        .query(query)
-        .authorize(this._authorize)
-        .validate(this._validate);
+        .query(query);
     }
 
     return this;
@@ -182,9 +158,7 @@ export default class ServerObject {
     if (typeof query === 'function') {
       this._update = new UpdateQuery()
         .object(this)
-        .query(query)
-        .authorize(this._authorize)
-        .validate(this._validate);
+        .query(query);
     }
 
     return this;
@@ -198,8 +172,7 @@ export default class ServerObject {
     if (typeof query === 'function') {
       this._delete = new DeleteQuery()
         .object(this)
-        .query(query)
-        .authorize(this._authorize);
+        .query(query);
     }
 
     return this;

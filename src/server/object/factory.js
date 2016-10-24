@@ -7,9 +7,6 @@ export default class ServerObjectFactory {
     this._cache = null;
     this._connection = null;
 
-    this._authorize = (d, r, c) => c();
-    this._validate = (d, r, c) => c();
-
     this._select = null;
     this._insert = null;
     this._update = null;
@@ -33,16 +30,6 @@ export default class ServerObjectFactory {
 
   connection(value) {
     this._connection = value;
-    return this;
-  }
-
-  authorize(value) {
-    this._authorize = value;
-    return this;
-  }
-
-  validate(value) {
-    this._validate = value;
     return this;
   }
 
@@ -73,8 +60,6 @@ export default class ServerObjectFactory {
       .model(this._model)
       .cache(this._cache)
       .connection(this._connection)
-      .authorize(this._authorize)
-      .validate(this._validate)
       .select(this._select)
       .insert(this._insert)
       .update(this._update)

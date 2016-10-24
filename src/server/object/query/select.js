@@ -2,7 +2,7 @@ import { ScolaError } from '@scola/error';
 import Query from '../query';
 
 export default class SelectQuery extends Query {
-  request(value, callback) {
+  execute(request, callback) {
     this._object.data((objectError, cacheData) => {
       if (objectError) {
         callback(objectError);
@@ -10,25 +10,17 @@ export default class SelectQuery extends Query {
       }
 
       if (cacheData) {
-        this._authorize(cacheData, value, (authError) => {
-          if (authError) {
-            callback(ScolaError.fromError(authError, '401 invalid_auth'));
-            return;
-          }
-
-          callback(null, cacheData, this._object);
-        });
-
+        callback(null, cacheData, this._object);
         return;
       }
 
-      this._query(value, (queryError, queryData) => {
-        this._handleQuery(queryError, queryData, value, callback);
+      this._query(request, (queryError, queryData) => {
+        this._handleQuery(queryError, queryData, callback);
       });
     });
   }
 
-  _handleQuery(queryError, queryData, request, callback) {
+  _handleQuery(queryError, queryData, callback) {
     if (queryError) {
       callback(ScolaError.fromError(queryError, '500 invalid_query'));
       return;
@@ -39,15 +31,8 @@ export default class SelectQuery extends Query {
       return;
     }
 
-    this._authorize(queryData, request, (authError) => {
-      if (authError) {
-        callback(ScolaError.fromError(authError, '401 invalid_auth'));
-        return;
-      }
-
-      this._object.data(queryData, (objectError) => {
-        callback(objectError, queryData, this._object);
-      });
+    this._object.data(queryData, (objectError) => {
+      callback(objectError, queryData, this._object);
     });
   }
 }

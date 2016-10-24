@@ -1,10 +1,7 @@
 import eachOf from 'async/eachOf';
-import series from 'async/series';
 import odiff from 'odiff';
 import ServerPage from './page';
 import MetaQuery from './query/meta';
-import parseFilter from '../../helper/parse-filter';
-import parseOrder from '../../helper/parse-order';
 
 export default class ServerList {
   constructor() {
@@ -12,10 +9,6 @@ export default class ServerList {
     this._name = null;
     this._model = null;
     this._cache = null;
-
-    this._authorize = null;
-    this._validateFilter = null;
-    this._validateOrder = null;
 
     this._meta = null;
     this._select = null;
@@ -120,53 +113,6 @@ export default class ServerList {
     return this;
   }
 
-  authorize(value) {
-    if (typeof value === 'undefined') {
-      return this._authorize;
-    }
-
-    this._authorize = value;
-    return this;
-  }
-
-  validate(filter, order) {
-    if (typeof filter === 'undefined') {
-      return [this._validateFilter, this._validateOrder];
-    }
-
-    this._validateFilter = filter;
-    this._validateOrder = order;
-
-    return this;
-  }
-
-  query(request, callback) {
-    if (this._query) {
-      callback(null, this._query.filter, this._query.order);
-      return;
-    }
-
-    const filter = parseFilter(this._filter);
-    const order = parseOrder(this._order);
-
-    series([
-      (asyncCallback) => this._validateFilter(filter, request, asyncCallback),
-      (asyncCallback) => this._validateOrder(order, request, asyncCallback)
-    ], (error) => {
-      if (error) {
-        callback(error);
-        return;
-      }
-
-      this._query = {
-        filter,
-        order
-      };
-
-      callback(null, this._query.filter, this._query.order);
-    });
-  }
-
   path() {
     return '/' + this._name + '/' + this._id;
   }
@@ -213,8 +159,7 @@ export default class ServerList {
 
     this._meta = new MetaQuery()
       .list(this)
-      .query(value)
-      .authorize(this._authorize);
+      .query(value);
 
     return this;
   }
@@ -232,7 +177,6 @@ export default class ServerList {
         .index(index)
         .list(this)
         .cache(this._cache)
-        .authorize(this._authorize)
         .select(this._select));
     }
 
@@ -326,13 +270,13 @@ export default class ServerList {
   }
 
   _changeMeta(action, diff, callback) {
-    this.meta().request(null, (error, cacheData) => {
+    this.meta().execute(null, (error, cacheData) => {
       if (error) {
         callback(error);
         return;
       }
 
-      this.meta().request(null, (metaError, data) => {
+      this.meta().execute(null, (metaError, data) => {
         if (metaError) {
           callback(metaError);
           return;

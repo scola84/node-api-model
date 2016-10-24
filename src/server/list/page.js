@@ -6,7 +6,6 @@ export default class ServerPage {
     this._index = null;
     this._list = null;
     this._cache = null;
-    this._authorize = null;
     this._select = null;
   }
 
@@ -42,15 +41,6 @@ export default class ServerPage {
     }
 
     this._cache = value;
-    return this;
-  }
-
-  authorize(value) {
-    if (typeof value === 'undefined') {
-      return this._authorize;
-    }
-
-    this._authorize = value;
     return this;
   }
 
@@ -91,8 +81,7 @@ export default class ServerPage {
     this._select = new SelectQuery()
       .list(this._list)
       .page(this)
-      .query(value)
-      .authorize(this._authorize);
+      .query(value);
 
     return this;
   }
@@ -109,7 +98,7 @@ export default class ServerPage {
         return;
       }
 
-      this.select().request(null, (queryError, data) => {
+      this.select().execute(null, (queryError, data) => {
         if (queryError) {
           callback(queryError);
           return;

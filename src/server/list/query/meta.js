@@ -12,37 +12,13 @@ export default class MetaQuery extends Query {
     return this;
   }
 
-  request(value, callback, force) {
-    this._list.query(value, (listError, filter, order) => {
-      if (listError) {
-        callback(ScolaError.fromError(listError, '400 invalid_input'));
-        return;
-      }
-
-      if (value === null) {
-        this._list.data((cacheError, cacheData) => {
-          this._handleData(cacheError, cacheData, filter, order, value,
-            callback, force);
-        });
-
-        return;
-      }
-
-      this._authorize(filter, order, value, (authError) => {
-        if (authError) {
-          callback(ScolaError.fromError(authError, '401 invalid_auth'));
-          return;
-        }
-
-        this._list.data((cacheError, cacheData) => {
-          this._handleData(cacheError, cacheData, filter, order, value,
-            callback, force);
-        });
-      });
+  execute(request, callback, force) {
+    this._list.data((cacheError, cacheData) => {
+      this._handleData(cacheError, cacheData, callback, force);
     });
   }
 
-  _handleData(cacheError, cacheData, filter, order, request, callback, force) {
+  _handleData(cacheError, cacheData, callback, force) {
     if (cacheError) {
       callback(cacheError);
       return;
@@ -53,13 +29,15 @@ export default class MetaQuery extends Query {
       return;
     }
 
-    this._query(filter, order, request, (queryError, queryData) => {
-      this._handleQuery(queryError, queryData, filter, order,
-        request, callback);
+    const filter = this._list.filter();
+    const order = this._list.order();
+
+    this._query(filter, order, (queryError, queryData) => {
+      this._handleQuery(queryError, queryData, callback);
     });
   }
 
-  _handleQuery(queryError, queryData, filter, order, request, callback) {
+  _handleQuery(queryError, queryData, callback) {
     if (queryError) {
       callback(ScolaError.fromError(queryError, '500 invalid_query'));
       return;
