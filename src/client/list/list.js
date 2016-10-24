@@ -1,5 +1,5 @@
+import parallel from 'async/parallel';
 import series from 'async/series';
-import eachOf from 'async/eachOf';
 import { EventEmitter } from 'events';
 import MetaRequest from './request/meta';
 import ClientPage from './page';
@@ -33,16 +33,12 @@ export default class ClientList extends EventEmitter {
 
     this._query = null;
     this._pages = new Map();
-
-    this._handleOpen = () => this._open();
   }
 
   destroy(cache) {
     this._model.list({
       id: this._id
     }, 'delete');
-
-    this._unbindConnection();
 
     this._pages.forEach((page) => {
       page.destroy(cache);
@@ -101,8 +97,6 @@ export default class ClientList extends EventEmitter {
     }
 
     this._connection = value;
-    this._bindConnection();
-
     return this;
   }
 
@@ -248,21 +242,29 @@ export default class ClientList extends EventEmitter {
     return this._pages.get(index);
   }
 
-  fetch(callback = () => {}) {
+  fetch(callback = () => {}, subscribe = false) {
+    if (!this._meta) {
+      return;
+    }
+
     this.meta().execute((error) => {
       if (error) {
         callback(error);
         return;
       }
 
+      if (subscribe === true && this._subscribed) {
+        this.subscribe(true);
+      }
+
       const pages = Array.from(this._pages.values());
 
-      eachOf(pages, (page, index, eachCallback) => {
-        page.fetch(eachCallback);
-      }, callback);
+      parallel(pages.map((page) => {
+        return (parallelCallback) => {
+          page.fetch(parallelCallback);
+        };
+      }), callback);
     }, true);
-
-    return this;
   }
 
   change(action, diff, callback = () => {}) {
@@ -288,34 +290,6 @@ export default class ClientList extends EventEmitter {
 
       this._changeMeta(action, diff, callback);
     });
-  }
-
-  _bindConnection() {
-    this._connection.setMaxListeners(this._connection.getMaxListeners() + 1);
-    this._connection.addListener('open', this._handleOpen);
-  }
-
-  _unbindConnection() {
-    this._connection.setMaxListeners(this._connection.getMaxListeners() - 1);
-    this._connection.removeListener('open', this._handleOpen);
-  }
-
-  _open(event) {
-    if (!this._meta) {
-      return;
-    }
-
-    this.meta().execute((error) => {
-      if (error) {
-        return;
-      }
-
-      if (this._subscribed) {
-        this.subscribe(true);
-      }
-
-      this.emit('open', event);
-    }, true);
   }
 
   _changeMeta(action, diff, callback) {

@@ -23,16 +23,12 @@ export default class ClientObject extends EventEmitter {
     this._delete = null;
 
     this._subscribed = null;
-
-    this._handleOpen = () => this._open();
   }
 
   destroy(cache) {
     this._model.object({
       id: this._id
     }, 'delete');
-
-    this._unbindConnection();
 
     if (this._subscribed === true) {
       this.subscribe(false);
@@ -85,8 +81,6 @@ export default class ClientObject extends EventEmitter {
     }
 
     this._connection = value;
-    this._bindConnection();
-
     return this;
   }
 
@@ -178,9 +172,23 @@ export default class ClientObject extends EventEmitter {
     return this._delete;
   }
 
-  fetch(callback) {
-    this.select().execute(callback, true);
-    return this;
+  fetch(callback = () => {}, subscribe = false) {
+    if (!this._select) {
+      return;
+    }
+
+    this.select().execute((error) => {
+      if (error) {
+        callback(error);
+        return;
+      }
+
+      if (subscribe === true && this._subscribed) {
+        this.subscribe(true);
+      }
+
+      callback();
+    }, true);
   }
 
   change(action, diff, callback = () => {}) {
@@ -193,16 +201,6 @@ export default class ClientObject extends EventEmitter {
     }
 
     return this;
-  }
-
-  _bindConnection() {
-    this._connection.setMaxListeners(this._connection.getMaxListeners() + 1);
-    this._connection.addListener('open', this._handleOpen);
-  }
-
-  _unbindConnection() {
-    this._connection.setMaxListeners(this._connection.getMaxListeners() - 1);
-    this._connection.removeListener('open', this._handleOpen);
   }
 
   _changeUpdate(diff, callback) {
@@ -247,23 +245,5 @@ export default class ClientObject extends EventEmitter {
     this.destroy(true);
 
     callback(null, diff);
-  }
-
-  _open(event) {
-    if (!this._select) {
-      return;
-    }
-
-    this.select().execute((error) => {
-      if (error) {
-        return;
-      }
-
-      if (this._subscribed) {
-        this.subscribe(true);
-      }
-
-      this.emit('open', event);
-    }, true);
   }
 }

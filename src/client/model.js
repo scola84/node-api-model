@@ -1,3 +1,4 @@
+import parallel from 'async/parallel';
 import sha1 from 'sha1';
 import ClientListFactory from './list/factory';
 import ClientObjectFactory from './object/factory';
@@ -10,6 +11,18 @@ export default class ClientModel {
 
     this._lists = new Map();
     this._objects = new Map();
+  }
+
+  fetch(callback = () => {}, subscribe = false) {
+    const lists = Array.from(this._lists.values());
+    const objects = Array.from(this._objects.values());
+    const models = [...lists, ...objects];
+
+    parallel(models.map((model) => {
+      return (parallelCallback) => {
+        model.fetch(parallelCallback, subscribe);
+      };
+    }), callback);
   }
 
   name(value) {

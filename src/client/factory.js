@@ -1,3 +1,4 @@
+import parallel from 'async/parallel';
 import ClientModel from './model';
 
 export default class ClientFactory {
@@ -15,6 +16,16 @@ export default class ClientFactory {
   connection(value) {
     this._connection = value;
     return this;
+  }
+
+  fetch(callback = () => {}, subscribe) {
+    const models = Array.from(this._models.values());
+
+    parallel(models.map((model) => {
+      return (parallelCallback) => {
+        model.fetch(parallelCallback, subscribe);
+      };
+    }), callback);
   }
 
   model(name) {
