@@ -18,7 +18,7 @@ export default class ClientFactory {
     return this;
   }
 
-  fetch(callback = () => {}, subscribe) {
+  fetch(callback = () => {}, subscribe = false) {
     const models = Array.from(this._models.values());
 
     parallel(models.map((model) => {

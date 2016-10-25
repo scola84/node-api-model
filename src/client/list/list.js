@@ -1,3 +1,4 @@
+import eachOf from 'async/eachOf';
 import parallel from 'async/parallel';
 import series from 'async/series';
 import { EventEmitter } from 'events';
