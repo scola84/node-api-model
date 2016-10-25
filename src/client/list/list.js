@@ -248,7 +248,7 @@ export default class ClientList extends EventEmitter {
       return;
     }
 
-    this.meta().execute((error) => {
+    this.meta().execute((error, data) => {
       if (error) {
         callback(error);
         return;
@@ -264,7 +264,19 @@ export default class ClientList extends EventEmitter {
         return (parallelCallback) => {
           page.fetch(parallelCallback);
         };
-      }), callback);
+      }), (pageError) => {
+        if (pageError) {
+          callback(pageError);
+          return;
+        }
+
+        this.emit('change', {
+          action: 'fetch',
+          data
+        });
+
+        callback(null, null, data);
+      });
     }, true);
   }
 

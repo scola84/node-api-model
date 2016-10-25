@@ -13,18 +13,6 @@ export default class ClientModel {
     this._objects = new Map();
   }
 
-  fetch(callback = () => {}, subscribe = false) {
-    const lists = Array.from(this._lists.values());
-    const objects = Array.from(this._objects.values());
-    const models = [...lists, ...objects];
-
-    parallel(models.map((model) => {
-      return (parallelCallback) => {
-        model.fetch(parallelCallback, subscribe);
-      };
-    }), callback);
-  }
-
   name(value) {
     this._name = value;
     return this;
@@ -101,5 +89,17 @@ export default class ClientModel {
     }
 
     return this._objects.get(id);
+  }
+
+  fetch(callback = () => {}, subscribe = false) {
+    const lists = Array.from(this._lists.values());
+    const objects = Array.from(this._objects.values());
+    const models = [...lists, ...objects];
+
+    parallel(models.map((model) => {
+      return (parallelCallback) => {
+        model.fetch(parallelCallback, subscribe);
+      };
+    }), callback);
   }
 }

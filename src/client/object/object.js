@@ -177,7 +177,7 @@ export default class ClientObject extends EventEmitter {
       return;
     }
 
-    this.select().execute((error) => {
+    this.select().execute((error, data) => {
       if (error) {
         callback(error);
         return;
@@ -187,7 +187,12 @@ export default class ClientObject extends EventEmitter {
         this.subscribe(true);
       }
 
-      callback();
+      this.emit('change', {
+        action: 'fetch',
+        data
+      });
+
+      callback(null, data);
     }, true);
   }
 
