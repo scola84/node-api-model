@@ -7,6 +7,7 @@ export default {
   external: [
     '@scola/error',
     'async/eachOf',
+    'async/parallel',
     'async/series',
     'events',
     'odiff',
